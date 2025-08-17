@@ -18,4 +18,8 @@
     <Folder Include="Validations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CnC.Domain\CnC.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

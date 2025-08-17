@@ -1,0 +1,12 @@
+﻿using CnC.Domain.Enums;
+
+namespace CnC.Domain.Entities;
+
+public class PaymentMethod:BaseEntity
+{
+    public string Name { get; set; } = null!;
+
+    public MethodForPayment MethodForPayment { get; set; }
+
+    public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+}
