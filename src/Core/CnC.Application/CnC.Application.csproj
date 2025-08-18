@@ -7,15 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Abstracts\Services\" />
-    <Folder Include="Abstracts\Repositories\" />
     <Folder Include="DTOs\" />
-    <Folder Include="Features\Orders\Commands\" />
-    <Folder Include="Features\Orders\Queries\" />
-    <Folder Include="Features\Products\Commands\" />
-    <Folder Include="Features\Products\Queries\" />
-    <Folder Include="Shared\" />
+    <Folder Include="Features\Order\Commands\" />
+    <Folder Include="Features\Order\Queries\" />
+    <Folder Include="Features\Product\Commands\" />
+    <Folder Include="Features\Product\Queries\" />
+    <Folder Include="Features\User\Queries\" />
     <Folder Include="Validations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="11.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
   </ItemGroup>
 
   <ItemGroup>
