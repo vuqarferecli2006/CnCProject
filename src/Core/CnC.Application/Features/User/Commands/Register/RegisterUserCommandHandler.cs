@@ -1,22 +1,26 @@
-﻿using CnC.Application.Shared.Responses;
+﻿using CnC.Application.Abstracts.Services;
+using CnC.Application.DTOs;
+using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using CnC.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Text;
+using System.Web;
 
 namespace CnC.Application.Features.User.Commands.Register;
 
 public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandRequest, BaseResponse<string>>
 {
     private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IEmailService _mailService;
 
-    public RegisterUserCommandHandler(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+
+    public RegisterUserCommandHandler(UserManager<AppUser> userManager,IEmailService mailService)
     {
         _userManager = userManager;
-        _roleManager = roleManager;
+        _mailService = mailService;
     }
 
     public async Task<BaseResponse<string>> Handle(RegisterUserCommandRequest request, CancellationToken cancellationToken)
@@ -27,7 +31,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
             return new("This email is already registered", HttpStatusCode.BadRequest);
 
         if (request.RoleId != MarketPlaceRole.Buyer && request.RoleId != MarketPlaceRole.Seller)
-            return new("Invalid role", HttpStatusCode.NotFound);
+            return new("Invalid role",HttpStatusCode.NotFound);
 
         var user = new AppUser
         {
@@ -46,7 +50,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
             {
                 errorMessage.AppendLine(error.Description);
             }
-            return new(errorMessage.ToString(), HttpStatusCode.BadRequest);
+            return new(errorMessage.ToString(),HttpStatusCode.BadRequest);
         }
 
         string roleName = request.RoleId switch
@@ -57,13 +61,24 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
         };
 
         if (roleName is null)
-            return new("Role not found", HttpStatusCode.NotFound);
+            return new("Role not found",HttpStatusCode.NotFound);
 
         var roleResult=await _userManager.AddToRoleAsync(user, roleName);
         
         if (!roleResult.Succeeded)
-            return new("Failed to assign role to user", HttpStatusCode.BadRequest);
+            return new("Failed to assign role to user",HttpStatusCode.BadRequest);
 
-        return new("User registered successfully", user.Id, true, HttpStatusCode.Created);
+        var emailConfirmLink = await GetEmailConfirm(user);
+
+        await _mailService.SendEmailAsync(new List<string> { user.Email},"Email Confirmation",emailConfirmLink);
+
+        return new("User registered successfully , Link sent to your email.", user.Id, true, HttpStatusCode.Created);
+    }
+
+    private async Task<string> GetEmailConfirm(AppUser user)
+    {
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var emailConfirmLink = $"https://localhost:7252/api/Users/ConfirmEmail?token={HttpUtility.UrlEncode(token)}&userId={user.Id}";
+        return emailConfirmLink;
     }
 }

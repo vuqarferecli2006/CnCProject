@@ -1,4 +1,5 @@
-﻿using CnC.Application.Features.User.Commands.Login;
+﻿using CnC.Application.Features.User.Commands.Email;
+using CnC.Application.Features.User.Commands.Login;
 using CnC.Application.Features.User.Commands.RefreshToken;
 using CnC.Application.Features.User.Commands.Register;
 using MediatR;
@@ -34,6 +35,16 @@ namespace CnC.WepApi.Controllers.User
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
         }
-
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        {
+            var command=new ConfirmEmailCommandRequest
+            {
+                UserId = userId,
+                Token = token
+            };
+            var response = await _mediator.Send(command);
+            return StatusCode((int)response.StatusCode, response);
+        }
     }
 }

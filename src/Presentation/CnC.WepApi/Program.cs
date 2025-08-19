@@ -70,6 +70,12 @@ builder.Services.AddMediatR(typeof(RegisterUserCommandRequest).Assembly);
 builder.Services.Configure<JwtSetting>(
     builder.Configuration.GetSection("Jwt"));
 
+builder.Services.Configure<EmailSetting>(
+    builder.Configuration.GetSection("EmailSetting"));
+
+builder.Services.Configure<RabbitMqSettings>(
+    builder.Configuration.GetSection("RabbitMQ"));
+
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSetting>();
 
 builder.Services.AddAuthorization(options =>

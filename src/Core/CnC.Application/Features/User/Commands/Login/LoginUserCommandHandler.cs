@@ -27,12 +27,16 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommandRequest, 
     {
         var existingUser =await _userManager.FindByEmailAsync(request.Email);
         if (existingUser is null)
-            return new("Email or password incorrect", HttpStatusCode.NotFound);
+            return new("Email or password incorrect",HttpStatusCode.NotFound);
+
+        if(!existingUser.EmailConfirmed)
+            return new("Please confirm your email",HttpStatusCode.BadRequest);
 
         SignInResult signInResult = await _signInManager.CheckPasswordSignInAsync(existingUser, request.Password, true);
 
         if (!signInResult.Succeeded)
             return new("Email or password incorrect", HttpStatusCode.NotFound);
+
 
         var token =await _jwtService.GenerateJwttoken(existingUser);
 
