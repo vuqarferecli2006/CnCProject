@@ -52,6 +52,33 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+
+    c.AddSecurityDefinition("Google", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/v2/auth"),
+                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    { "openid", "OpenID Connect" },
+                    { "email", "Access to your email" },
+                    { "profile", "Access to your profile" }
+                }
+            }
+        }
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
+            Array.Empty<string>()
+        }
+    });
 });
 
 builder.Services.AddDbContext<AppDbContext>(options=> 
@@ -75,6 +102,9 @@ builder.Services.Configure<EmailSetting>(
 
 builder.Services.Configure<RabbitMqSettings>(
     builder.Configuration.GetSection("RabbitMQ"));
+
+builder.Services.Configure<GoogleAuthConfigSetting>(
+    builder.Configuration.GetSection("Google"));
 
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSetting>();
 
@@ -107,6 +137,11 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
     };
+})
+.AddGoogle("Google", googleOptions =>
+{
+    googleOptions.ClientId = builder.Configuration["Google:ClientId"];
+    googleOptions.ClientSecret = builder.Configuration["Google:ClientSecret"];
 });
 
 

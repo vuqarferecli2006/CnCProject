@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Features.User.Commands.Email;
+using CnC.Application.Features.User.Commands.Google;
 using CnC.Application.Features.User.Commands.Login;
 using CnC.Application.Features.User.Commands.RefreshToken;
 using CnC.Application.Features.User.Commands.Register;
@@ -44,6 +45,12 @@ namespace CnC.WepApi.Controllers.User
                 Token = token
             };
             var response = await _mediator.Send(command);
+            return StatusCode((int)response.StatusCode, response);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Google([FromBody] GoogleLoginCommandRequest request)
+        {
+            var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
         }
     }
