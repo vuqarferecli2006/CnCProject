@@ -1,6 +1,6 @@
-﻿namespace CnC.Application.DTOs;
+﻿namespace CnC.Application.DTOs.Email;
 
-public class EmailMessageDto
+public record EmailMessageDto
 {
     public List<string> To { get; set; } = new();
     public string Subject { get; set; }=null!;

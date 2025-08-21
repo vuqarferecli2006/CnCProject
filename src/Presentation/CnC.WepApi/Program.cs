@@ -103,8 +103,11 @@ builder.Services.Configure<EmailSetting>(
 builder.Services.Configure<RabbitMqSettings>(
     builder.Configuration.GetSection("RabbitMQ"));
 
-builder.Services.Configure<GoogleAuthConfigSetting>(
+builder.Services.Configure<GoogleSetting>(
     builder.Configuration.GetSection("Google"));
+
+builder.Services.Configure<FaceBookSetting>(
+    builder.Configuration.GetSection("Facebook"));
 
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSetting>();
 
@@ -142,6 +145,11 @@ builder.Services.AddAuthentication(options =>
 {
     googleOptions.ClientId = builder.Configuration["Google:ClientId"];
     googleOptions.ClientSecret = builder.Configuration["Google:ClientSecret"];
+})
+.AddFacebook("Facebook", options =>
+{
+    options.AppId = builder.Configuration["Facebook:AppId"];
+    options.AppSecret = builder.Configuration["Facebook:AppSecret"];
 });
 
 

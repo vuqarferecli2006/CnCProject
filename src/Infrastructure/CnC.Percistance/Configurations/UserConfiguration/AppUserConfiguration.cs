@@ -15,7 +15,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
                    .HasMaxLength(100);
 
         builder.Property(u => u.ProfilePictureUrl)
-            .HasMaxLength(250);
+            .HasMaxLength(1000);
 
         // 1-1: AppUser ↔ Basket
         builder.HasOne(u => u.Basket)

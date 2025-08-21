@@ -1,4 +1,4 @@
-﻿using CnC.Application.DTOs;
+﻿using CnC.Application.DTOs.Email;
 using CnC.Application.Shared.Responses;
 
 namespace CnC.Application.Abstracts.Services;

@@ -30,7 +30,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommandReque
 
     public async Task<AuthResponse> Handle(GoogleLoginCommandRequest request, CancellationToken cancellationToken)
     {
-        var googleClientId = _configuration["Google:ClientId"] ?? throw new ArgumentNullException("Google ClientId configuration is missing.");
+        var googleClientId = _configuration["Google:ClientId"] ?? throw new InvalidOperationException("Google ClientId configuration is missing.");
 
         GoogleJsonWebSignature.Payload payload;
 
@@ -70,28 +70,30 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommandReque
                     _logger.LogError("User creation failed for email {Email}: {Errors}", payload.Email, errors);
                     throw new InvalidOperationException($"Failed to create user: {errors}");
                 }
-            }
-            var addLoginResult = await _userManager.AddLoginAsync(userLogininfo, new UserLoginInfo("Google", payload.Subject, "Google"));
 
+                // ✅ Yalnız yeni user yaradılarkən rol ver
+                if (request.RoleId is not null)
+                {
+                    var roleName = request.RoleId.ToString();
+                    var addRoleResult = await _userManager.AddToRoleAsync(userLogininfo, roleName);
+                    if (!addRoleResult.Succeeded)
+                    {
+                        var roleErrors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
+                        _logger.LogError("Assigning role {Role} to user {Email} failed: {Errors}", roleName, payload.Email, roleErrors);
+                        throw new InvalidOperationException($"Failed to assign role: {roleErrors}");
+                    }
+                }
+            }
+
+            var addLoginResult = await _userManager.AddLoginAsync(userLogininfo, new UserLoginInfo("Google", payload.Subject, "Google"));
             if (!addLoginResult.Succeeded)
             {
                 var loginErrors = string.Join(", ", addLoginResult.Errors.Select(e => e.Description));
                 _logger.LogError("Adding Google login failed for user {Email}: {Errors}", payload.Email, loginErrors);
                 throw new InvalidOperationException($"Failed to add Google login info: {loginErrors}");
             }
-
-            if (request.RoleId is not null)
-            {
-                var roleName = request.RoleId.ToString();
-                var addRoleResult = await _userManager.AddToRoleAsync(userLogininfo, roleName);
-                if (!addRoleResult.Succeeded)
-                {
-                    var roleErrors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
-                    _logger.LogError("Assigning role {Role} to user {Email} failed: {Errors}", roleName, payload.Email, roleErrors);
-                    throw new InvalidOperationException($"Failed to assign role: {roleErrors}");
-                }
-            }
         }
+
         else
         {
             if (!string.Equals(userLogininfo.ProfilePictureUrl, payload.Picture, StringComparison.OrdinalIgnoreCase))

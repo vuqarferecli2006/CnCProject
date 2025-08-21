@@ -1,5 +1,4 @@
 ﻿using CnC.Application.Abstracts.Services;
-using CnC.Application.DTOs;
 using CnC.Application.Shared.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +8,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using CnC.Application.DTOs.Email;
 
 namespace CnC.Infrastructure.Services.EmailRabbitMQ;
 

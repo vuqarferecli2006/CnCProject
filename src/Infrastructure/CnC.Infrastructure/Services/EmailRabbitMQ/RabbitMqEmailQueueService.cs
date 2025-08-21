@@ -1,5 +1,5 @@
 ﻿using CnC.Application.Abstracts.Services;
-using CnC.Application.DTOs;
+using CnC.Application.DTOs.Email;
 using CnC.Application.Shared.Responses;
 using CnC.Application.Shared.Settings;
 using Microsoft.Extensions.Configuration;
