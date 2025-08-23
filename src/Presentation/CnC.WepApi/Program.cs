@@ -52,33 +52,6 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
-
-    c.AddSecurityDefinition("Google", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.OAuth2,
-        Flows = new OpenApiOAuthFlows
-        {
-            AuthorizationCode = new OpenApiOAuthFlow
-            {
-                AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/v2/auth"),
-                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
-                Scopes = new Dictionary<string, string>
-                {
-                    { "openid", "OpenID Connect" },
-                    { "email", "Access to your email" },
-                    { "profile", "Access to your profile" }
-                }
-            }
-        }
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-            Array.Empty<string>()
-        }
-    });
 });
 
 builder.Services.AddDbContext<AppDbContext>(options=> 
@@ -119,6 +92,8 @@ builder.Services.AddAuthorization(options =>
             policy.RequireClaim("Permission", permission));
     }
 });
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -175,6 +150,7 @@ app.UseRouting();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();
+app.UseMiddleware<BlacklistTokenMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

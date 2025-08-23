@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Web;
 
-namespace CnC.Application.Features.User.Commands.Email;
+namespace CnC.Application.Features.User.Commands.Email.ConfirmEmail;
 
 public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommandRequest, BaseResponse<string>>
 {
@@ -24,7 +24,6 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommandReq
             return new("Email confirmation failed",HttpStatusCode.BadRequest);
 
         var decodeToken= HttpUtility.UrlDecode(request.Token);
-        
         var result = await _userManager.ConfirmEmailAsync(user, request.Token);
         
         if (!result.Succeeded)

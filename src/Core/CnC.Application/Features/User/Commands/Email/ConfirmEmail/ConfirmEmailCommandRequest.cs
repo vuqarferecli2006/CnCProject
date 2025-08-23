@@ -1,7 +1,7 @@
 ﻿using CnC.Application.Shared.Responses;
 using MediatR;
 
-namespace CnC.Application.Features.User.Commands.Email;
+namespace CnC.Application.Features.User.Commands.Email.ConfirmEmail;
 
 public class ConfirmEmailCommandRequest: IRequest<BaseResponse<string>>
 {

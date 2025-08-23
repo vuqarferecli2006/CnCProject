@@ -11,7 +11,6 @@
     <Folder Include="Features\Order\Queries\" />
     <Folder Include="Features\Product\Commands\" />
     <Folder Include="Features\Product\Queries\" />
-    <Folder Include="Features\User\Queries\" />
     <Folder Include="Validations\" />
   </ItemGroup>
 
@@ -20,6 +19,7 @@
     <PackageReference Include="MediatR" Version="11.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
   </ItemGroup>
 
   <ItemGroup>

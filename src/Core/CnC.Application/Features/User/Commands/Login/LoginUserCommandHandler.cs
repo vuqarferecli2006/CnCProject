@@ -2,7 +2,9 @@
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 
 namespace CnC.Application.Features.User.Commands.Login;
@@ -12,15 +14,21 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommandRequest, 
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IJwtService _jwtService;   
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITokenBlacklistService _tokenBlacklistService;
 
 
     public LoginUserCommandHandler(UserManager<AppUser> userManager, 
                                  SignInManager<AppUser> signInManager,
-                                  IJwtService jwtService)
+                                  IJwtService jwtService,
+                                  IHttpContextAccessor httpContextAccessor,
+                                  ITokenBlacklistService tokenBlacklistService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtService = jwtService;
+        _httpContextAccessor = httpContextAccessor;
+        _tokenBlacklistService = tokenBlacklistService;
     }
 
     public async Task<BaseResponse<TokenResponse>> Handle(LoginUserCommandRequest request, CancellationToken cancellationToken)

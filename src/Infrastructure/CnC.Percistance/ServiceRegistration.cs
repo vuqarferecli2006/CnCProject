@@ -25,7 +25,8 @@ public static class ServiceRegistration
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailQueueService, RabbitMqEmailQueueService>();
-            //services.AddHostedService<EmailConsumerService>();
+            services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService>();
+        //services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
 
         #endregion
     }
