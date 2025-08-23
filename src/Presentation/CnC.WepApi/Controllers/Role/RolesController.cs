@@ -1,4 +1,5 @@
-﻿using CnC.Application.Features.User.Commands.Role.Request;
+﻿using CnC.Application.Features.User.Commands.Role.CreateRole;
+using CnC.Application.Features.User.Commands.Role.Request;
 using CnC.Application.Shared.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

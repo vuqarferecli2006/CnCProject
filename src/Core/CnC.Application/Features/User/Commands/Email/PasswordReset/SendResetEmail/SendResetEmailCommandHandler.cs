@@ -40,5 +40,4 @@ public class SendResetEmailCommandHandler : IRequestHandler<SendResetEmailComman
         Console.WriteLine("Reset Password Link : " + link);
         return link;
     }
-
 }

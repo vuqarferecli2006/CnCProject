@@ -1,4 +1,4 @@
-﻿using CnC.Application.Features.User.Commands.Role.Request;
+﻿using CnC.Application.Features.User.Commands.Role.CreateRole;
 using CnC.Application.Shared.Helpers.RoleHelpers;
 using CnC.Application.Shared.Responses;
 using MediatR;
