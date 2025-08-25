@@ -79,6 +79,9 @@ builder.Services.Configure<RabbitMqSettings>(
 builder.Services.Configure<GoogleSetting>(
     builder.Configuration.GetSection("Google"));
 
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+
 builder.Services.Configure<FaceBookSetting>(
     builder.Configuration.GetSection("Facebook"));
 
