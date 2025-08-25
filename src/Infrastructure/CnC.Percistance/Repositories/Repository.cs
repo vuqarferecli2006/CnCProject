@@ -22,12 +22,12 @@ public class Repository<T> : IReadRepository<T>, IWriteRepository<T> where T : B
         await Table.AddAsync(entity);
     }
 
-    public void UpdateAsync(T entity)
+    public void Update(T entity)
     {
         Table.Update(entity);
     }
     
-    public void DeleteAsync(T entity)
+    public void Delete(T entity)
     {
         Table.Remove(entity);
     }

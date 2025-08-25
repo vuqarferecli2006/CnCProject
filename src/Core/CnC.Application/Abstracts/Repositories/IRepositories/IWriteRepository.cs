@@ -6,9 +6,9 @@ public interface IWriteRepository<T> where T : BaseEntity
 {
     Task AddAsync(T entity);
 
-    void UpdateAsync(T entity);
+    void Update(T entity);
 
-    void DeleteAsync(T entity);
+    void Delete(T entity);
 
     Task SaveChangeAsync();
 }
