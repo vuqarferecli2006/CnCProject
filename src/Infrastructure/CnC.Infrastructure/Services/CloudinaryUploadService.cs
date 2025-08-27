@@ -22,30 +22,55 @@ public class CloudinaryUploadService : IFileServices
         _cloudinary = new Cloudinary(account);
     }
 
-    public async Task<string> UploadAsync(IFormFile file, string folderName = "product-images")
+    public async Task<string> UploadAsync(IFormFile file, string folderName = "product-files")
     {
-
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
 
         await using var stream = file.OpenReadStream();
 
-        var uploadParams = new ImageUploadParams
+        // Faylın MIME tipinə baxaq
+        var isImage = file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+
+        if (isImage)
         {
-            File = new FileDescription(file.FileName, stream),
-            Folder = folderName,
-            UseFilename = true,
-            UniqueFilename = true,
-            Overwrite = false,
-            Transformation = new Transformation().Quality("auto").FetchFormat("auto")
-        };
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(file.FileName, stream),
+                Folder = folderName,
+                UseFilename = true,
+                UniqueFilename = true,
+                Overwrite = false,
+                Transformation = new Transformation()
+                    .Quality("auto")
+                    .FetchFormat("auto")
+            };
 
-        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
-        if (uploadResult.StatusCode != HttpStatusCode.OK)
-            throw new Exception("Failed to upload image to Cloudinary: " + uploadResult.Error?.Message);
+            if (uploadResult.StatusCode != HttpStatusCode.OK)
+                throw new Exception("Failed to upload image to Cloudinary: " + uploadResult.Error?.Message);
 
-        return uploadResult.SecureUrl.ToString();
+            return uploadResult.SecureUrl.ToString();
+        }
+        else
+        {
+            var uploadParams = new RawUploadParams
+            {
+                File = new FileDescription(file.FileName, stream),
+                Folder = folderName,
+                UseFilename = true,
+                UniqueFilename = true,
+                Overwrite = false
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.StatusCode != HttpStatusCode.OK)
+                throw new Exception("Failed to upload file to Cloudinary: " + uploadResult.Error?.Message);
+
+            return uploadResult.SecureUrl.ToString();
+        }
     }
 
     public async Task DeleteFileAsync(string fileUrl)

@@ -44,4 +44,8 @@ public class AppDbContext:IdentityDbContext<AppUser>
     public DbSet<PaymentMethod> PaymentMethods { get; set; } = null!;
 
     public DbSet<Product> Products { get; set; } = null!;
+
+    public DbSet<CurrencyRate> CurrencyRates { get; set; } = null!;
+
+    public DbSet<ProductCurrency> ProductCurrencies { get; set; } = null!;
 }

@@ -3,6 +3,7 @@ using System;
 using CnC.Percistance.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CnC.Percistance.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250826122454_AddProductCurrecyTable")]
+    partial class AddProductCurrecyTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -219,36 +222,6 @@ namespace CnC.Percistance.Migrations
                     b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("CnC.Domain.Entities.CurrencyRate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CurrencyCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("RateAgainstAzn")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CurrencyRates");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.Download", b =>
@@ -495,6 +468,10 @@ namespace CnC.Percistance.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<decimal>("DiscountedPercent")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
@@ -516,9 +493,6 @@ namespace CnC.Percistance.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
-
-                    b.Property<decimal>("PriceAzn")
-                        .HasColumnType("numeric");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
@@ -566,17 +540,17 @@ namespace CnC.Percistance.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("ConvertedPrice")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("CurrencyRateId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("Currency")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
@@ -585,8 +559,6 @@ namespace CnC.Percistance.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyRateId");
 
                     b.HasIndex("ProductId");
 
@@ -953,19 +925,11 @@ namespace CnC.Percistance.Migrations
 
             modelBuilder.Entity("CnC.Domain.Entities.ProductCurrency", b =>
                 {
-                    b.HasOne("CnC.Domain.Entities.CurrencyRate", "CurrencyRate")
-                        .WithMany()
-                        .HasForeignKey("CurrencyRateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CnC.Domain.Entities.Product", "Product")
-                        .WithMany("ProductCurrencies")
+                        .WithMany("Price")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("CurrencyRate");
 
                     b.Navigation("Product");
                 });
@@ -1102,9 +1066,9 @@ namespace CnC.Percistance.Migrations
 
                     b.Navigation("OrderItems");
 
-                    b.Navigation("ProductBaskets");
+                    b.Navigation("Price");
 
-                    b.Navigation("ProductCurrencies");
+                    b.Navigation("ProductBaskets");
 
                     b.Navigation("ProductDescription")
                         .IsRequired();
