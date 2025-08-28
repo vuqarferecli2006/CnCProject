@@ -17,4 +17,6 @@ public class ProductDescription:BaseEntity
     public Guid ProductId { get; set; }
 
     public Product Product { get; set; } = null!;
+
+    public ICollection<ProductFiles> ProductFiles { get; set; } = new List<ProductFiles>();
 }

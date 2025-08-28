@@ -10,9 +10,16 @@ public class DownloadConfiguration : IEntityTypeConfiguration<Download>
     {
         builder.HasKey(d => d.Id);
 
-        builder.HasOne(d => d.OrderProduct)
-               .WithOne(op => op.Download)
-               .HasForeignKey<Download>(d => d.OrderProductId)
-               .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(d => d.FileUrl)
+            .IsRequired()
+            .HasMaxLength(1000);
+
+        builder.HasOne(op=> op.OrderProduct)
+               .WithMany(d => d.Downloads)
+               .HasForeignKey(d => d.OrderProductId);
+
+        builder.HasOne(pf => pf.ProductFiles)
+                .WithMany(d => d.Downloads)
+                .HasForeignKey(d => d.ProductFilesId);
     }
 }

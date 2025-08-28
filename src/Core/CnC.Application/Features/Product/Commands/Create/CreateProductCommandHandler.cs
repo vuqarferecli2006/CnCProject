@@ -6,6 +6,7 @@ using CnC.Domain.Entities;
 using CnC.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Net;
 using System.Security.Claims;
@@ -45,9 +46,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
 
         var previewUrl = await _fileService.UploadAsync(request.PreviewImageUrl, "product-preview");
 
-        var existingProduct = await _productReadRepository.GetByName(request.Name);
+        var existingProduct = await _productReadRepository.GetAll().Where(p=>p.Name.ToLower().Trim()==request.Name.ToLower().Trim()).ToListAsync();
 
-        if(existingProduct is not null)
+        if (existingProduct.Any())
             return new("A product with the same name already exists.", HttpStatusCode.BadRequest);
 
         decimal discountedPriceAzn = request.DiscountedPercent > 0

@@ -14,13 +14,6 @@ public class ProductRepository : Repository<Product>, IProductReadRepository, IP
         _context = context;
     }
 
-    public async Task<Product?> GetByName(string productName)
-    {
-        return await _context.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Name.ToLower().Trim() == productName.ToLower().Trim());
-    }
-
     public async Task<CurrencyRate?> GetCurrencyRateByCodeAsync(string currencyCode)
     {
         return await _context.CurrencyRates

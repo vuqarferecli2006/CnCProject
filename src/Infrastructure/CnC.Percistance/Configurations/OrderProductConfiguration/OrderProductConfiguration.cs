@@ -16,9 +16,9 @@ public class OrderProductConfiguration : IEntityTypeConfiguration<OrderProduct>
                .WithMany(p => p.OrderItems)
                .HasForeignKey(op => op.ProductId);
 
-        builder.HasOne(op => op.Download)
-               .WithOne(d => d.OrderProduct)
-               .HasForeignKey<Download>(d => d.OrderProductId);
+        builder.HasMany(op => op.Downloads)
+                .WithOne(d => d.OrderProduct)
+                .HasForeignKey(d => d.OrderProductId);
     }
 }
 

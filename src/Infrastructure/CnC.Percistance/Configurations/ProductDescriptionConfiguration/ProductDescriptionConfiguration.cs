@@ -26,6 +26,10 @@ public class ProductDescriptionConfiguration : IEntityTypeConfiguration<ProductD
         builder.HasOne(pd => pd.Product)
                .WithOne(p => p.ProductDescription)
                .HasForeignKey<ProductDescription>(pd => pd.ProductId);
+
+        builder.HasMany(pd => pd.ProductFiles)
+                .WithOne(pf => pf.ProductDescription)
+                .HasForeignKey(pf => pf.ProductDescriptionId);
     }
 }
 

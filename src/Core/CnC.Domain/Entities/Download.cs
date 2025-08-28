@@ -9,5 +9,9 @@ public class Download:BaseEntity
     public Guid OrderProductId { get; set; }    
 
     public OrderProduct OrderProduct { get; set; } = null!;
+
+    public Guid ProductFilesId { get; set; }
+
+    public ProductFiles ProductFiles { get; set; } = null!;
 }
     

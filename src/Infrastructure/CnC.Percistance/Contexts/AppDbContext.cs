@@ -48,4 +48,6 @@ public class AppDbContext:IdentityDbContext<AppUser>
     public DbSet<CurrencyRate> CurrencyRates { get; set; } = null!;
 
     public DbSet<ProductCurrency> ProductCurrencies { get; set; } = null!;
+
+    public DbSet<ProductFiles> ProductFiles { get; set; } = null!;
 }

@@ -27,8 +27,14 @@ public class CurrencyUpdateJob
             var existingRate = await _context.CurrencyRates
                 .FirstOrDefaultAsync(c => c.CurrencyCode == code && c.Date == DateTime.UtcNow.Date);
 
-            if (existingRate == null)
+            if (existingRate != null)
             {
+                // Valyuta qiymətini yeniləyirik
+                existingRate.RateAgainstAzn = rate;
+            }
+            else
+            {
+                // Valyuta mövcud deyilsə, yeni əlavə edirik
                 var entity = new CurrencyRate
                 {
                     CurrencyCode = code,
@@ -38,17 +44,11 @@ public class CurrencyUpdateJob
 
                 _context.CurrencyRates.Add(entity);
             }
-            else
-            {
-                existingRate.RateAgainstAzn = rate;
-            }
         }
 
         await _context.SaveChangesAsync();
-
         await UpdateProductCurrenciesAsync();
     }
-
     private async Task UpdateProductCurrenciesAsync()
     {
         var todayRates = await _context.CurrencyRates
@@ -70,18 +70,20 @@ public class CurrencyUpdateJob
                 var existing = await _context.ProductCurrencies
                     .FirstOrDefaultAsync(pc => pc.ProductId == product.Id && pc.CurrencyRateId == rate.Id);
 
-                if (existing == null)
+                if (existing != null)
                 {
+                    // Mövcud qiyməti yeniləyirik
+                    existing.ConvertedPrice = convertedPrice;
+                }
+                else
+                {
+                    // Yenisini əlavə edirik
                     _context.ProductCurrencies.Add(new ProductCurrency
                     {
                         ProductId = product.Id,
                         CurrencyRateId = rate.Id,
                         ConvertedPrice = convertedPrice
                     });
-                }
-                else
-                {
-                    existing.ConvertedPrice = convertedPrice;
                 }
             }
         }
