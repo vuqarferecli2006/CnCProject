@@ -1,5 +1,7 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
+using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
+using CnC.Application.Abstracts.Repositories.IProductFilesRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Services;
 using CnC.Application.Shared.Helpers.RoleHelpers;
@@ -22,13 +24,16 @@ public static class ServiceRegistration
             services.AddScoped<IProductReadRepository, ProductRepository>();
             services.AddScoped<IProductWriteRepository, ProductRepository>();
             services.AddScoped<IProductCurrencyWriteRepository, ProductCurrencyWriteRepository>();
+            services.AddScoped<IProductDescriptionReadRepository, ProductDescriptionRepository>();
+            services.AddScoped<IProductDescriptionWriteRepository, ProductDescriptionRepository>();
+            services.AddScoped<IProductFilesWriteRepository, ProductFilesRepository>();
         #endregion
 
 
-            
+
 
         #region Services
-            services.AddSingleton<EmailConsumer>();
+        services.AddSingleton<EmailConsumer>();
             services.AddScoped<RoleCreationHelper>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IEmailService, EmailService>();

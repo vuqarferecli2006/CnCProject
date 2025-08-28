@@ -58,7 +58,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         var product = new Domain.Entities.Product
         {
             Name = request.Name,
-            Model = request.Model,
             CategoryId = request.CategoryId,
             PreviewImageUrl = previewUrl,
             DiscountedPercent = request.DiscountedPercent,

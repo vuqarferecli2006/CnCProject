@@ -8,8 +8,6 @@ public class Product:BaseEntity
 
     public decimal DiscountedPercent { get; set; }
 
-    public string Model { get; set; } = null!;
-
     public int Score { get; set; }
 
     public decimal PriceAzn { get; set; }

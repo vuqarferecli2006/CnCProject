@@ -21,9 +21,6 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.DiscountedPercent)
             .HasPrecision(5, 2);
 
-        builder.Property(p => p.Model)
-            .HasMaxLength(100);
-
         builder.HasOne(p => p.Category)
                .WithMany(c => c.Products)
                .HasForeignKey(p => p.CategoryId);
