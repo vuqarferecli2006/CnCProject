@@ -17,20 +17,21 @@ public class CloudinaryUploadService : IFileServices
             config.Value.CloudName,
             config.Value.ApiKey,
             config.Value.ApiSecret
-        );  
+        );
 
         _cloudinary = new Cloudinary(account);
     }
 
     public async Task<string> UploadAsync(IFormFile file, string folderName = "product-files")
     {
-        if (file == null || file.Length == 0)
+        if (file?.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
 
         await using var stream = file.OpenReadStream();
 
-        // Faylın MIME tipinə baxaq
-        var isImage = file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+        var isImage = IsImageFile(file.ContentType);
+
+        UploadResult uploadResult;
 
         if (isImage)
         {
@@ -41,17 +42,9 @@ public class CloudinaryUploadService : IFileServices
                 UseFilename = true,
                 UniqueFilename = true,
                 Overwrite = false,
-                Transformation = new Transformation()
-                    .Quality("auto")
-                    .FetchFormat("auto")
+                Transformation = new Transformation().Quality("auto").FetchFormat("auto")
             };
-
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-
-            if (uploadResult.StatusCode != HttpStatusCode.OK)
-                throw new Exception("Failed to upload image to Cloudinary: " + uploadResult.Error?.Message);
-
-            return uploadResult.SecureUrl.ToString();
+            uploadResult = await _cloudinary.UploadAsync(uploadParams);
         }
         else
         {
@@ -63,45 +56,97 @@ public class CloudinaryUploadService : IFileServices
                 UniqueFilename = true,
                 Overwrite = false
             };
-
-            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-
-            if (uploadResult.StatusCode != HttpStatusCode.OK)
-                throw new Exception("Failed to upload file to Cloudinary: " + uploadResult.Error?.Message);
-
-            return uploadResult.SecureUrl.ToString();
+            uploadResult = await _cloudinary.UploadAsync(uploadParams);
         }
+
+        if (uploadResult.StatusCode != HttpStatusCode.OK)
+            throw new Exception($"Upload failed: {uploadResult.Error?.Message}");
+
+        return uploadResult.SecureUrl.ToString();
     }
 
     public async Task DeleteFileAsync(string fileUrl)
     {
-        var publicId = GetFileIdFromUrl(fileUrl);
-        if (string.IsNullOrEmpty(publicId))
-            return;
+        if (string.IsNullOrWhiteSpace(fileUrl)) return;
 
-        var deletionParams = new DeletionParams(publicId);
+        var publicId = ExtractPublicId(fileUrl);
+        if (string.IsNullOrEmpty(publicId)) return;
 
-        await _cloudinary.DestroyAsync(deletionParams);
+        var isImage = IsImageFile(fileUrl);
+        var result = await DeleteByResourceType(publicId, isImage);
+
+        if (result.Result != "ok" && !isImage)
+            await DeleteByResourceType(publicId, ResourceType.Auto);
     }
 
-    private string GetFileIdFromUrl(string url)
+    public async Task<bool> CheckFileExistsAsync(string fileUrl)
     {
+        var publicId = ExtractPublicId(fileUrl);
+        if (string.IsNullOrEmpty(publicId)) return false;
 
-        try
+        var resourceType = IsImageFile(fileUrl) ? ResourceType.Image : ResourceType.Raw;
+        var result = await _cloudinary.GetResourceAsync(new GetResourceParams(publicId)
         {
-            var uri = new Uri(url);
-            var segments = uri.AbsolutePath.Split('/');
-            var fileName = Path.GetFileNameWithoutExtension(segments.Last());
-            var folder = segments.Length >= 3 ? segments[^2] : null;
+            ResourceType = resourceType
+        });
 
-            return string.IsNullOrEmpty(folder) 
-                ? fileName 
-                : $"{folder}/{fileName}";
-        }
-        catch 
-        {
-            return string.Empty;
-        }
-
+        return result.StatusCode == HttpStatusCode.OK;
     }
+
+    #region Private Methods
+
+
+
+    private async Task<DeletionResult> DeleteByResourceType(string publicId, bool isImage)
+        => await DeleteByResourceType(publicId, isImage ? ResourceType.Image : ResourceType.Raw);
+
+
+    private async Task<DeletionResult> DeleteByResourceType(string publicId, ResourceType resourceType)
+        => await _cloudinary.DestroyAsync(new DeletionParams(publicId) { ResourceType = resourceType });
+
+
+    private static bool IsImageFile(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return false;
+
+        if (input.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return true;
+
+        var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff", ".svg" };
+        var extension = Path.GetExtension(input).ToLowerInvariant();
+        return imageExtensions.Contains(extension);
+    }
+
+    private static string ExtractPublicId(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return string.Empty;
+
+        var uri = new Uri(url);
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var uploadIndex = Array.IndexOf(segments, "upload");
+
+        if (uploadIndex == -1 || uploadIndex + 1 >= segments.Length)
+            return string.Empty;
+
+        var publicIdParts = segments.Skip(uploadIndex + 1).ToList();
+
+        if (publicIdParts.Count > 0 && IsVersionSegment(publicIdParts[0]))
+            publicIdParts.RemoveAt(0);
+
+        if (publicIdParts.Count == 0) return string.Empty;
+        
+        if (IsImageFile(url))
+        {
+            var lastPart = publicIdParts.Last();
+            var dotIndex = lastPart.LastIndexOf('.');
+            if (dotIndex > 0)
+                publicIdParts[publicIdParts.Count - 1] = lastPart.Substring(0, dotIndex);
+        }
+
+        return string.Join("/", publicIdParts);
+    }
+
+    private static bool IsVersionSegment(string segment)
+        => segment.StartsWith("v") && segment.Length > 1 && long.TryParse(segment.Substring(1), out _);
+
+    #endregion
 }

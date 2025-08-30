@@ -4,6 +4,7 @@ namespace CnC.Application.Abstracts.Services;
 
 public interface IFileServices
 {
-    Task<string> UploadAsync(IFormFile file, string folderName);
-    public Task DeleteFileAsync(string relativePath);
+    Task<string> UploadAsync(IFormFile file, string folderName = "product-files");
+    Task DeleteFileAsync(string fileUrl);
+    Task<bool> CheckFileExistsAsync(string fileUrl);
 }

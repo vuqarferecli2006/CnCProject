@@ -35,6 +35,9 @@ public class CreateProductDescriptionHandler : IRequestHandler<CreateProductDesc
         if(productExist is null)
             return new("Product not found", HttpStatusCode.NotFound);
 
+
+
+
         string imagePath = await _fileService.UploadAsync(request.ImageUrl, "product-descriptions");
 
         var description = new Domain.Entities.ProductDescription
@@ -42,6 +45,8 @@ public class CreateProductDescriptionHandler : IRequestHandler<CreateProductDesc
             ProductId = request.ProductId,
             Description = request.Description,
             Model = request.Model,
+            CreatedAt = DateTime.UtcNow,
+            DiscountedPercent=productExist.DiscountedPercent,
             ImageUrl = imagePath,
             
         };
@@ -69,3 +74,5 @@ public class CreateProductDescriptionHandler : IRequestHandler<CreateProductDesc
         return new("Product description created successfully",true, HttpStatusCode.Created);
     }
 }
+
+

@@ -2,6 +2,7 @@
 using CnC.Domain.Entities;
 using CnC.Percistance.Contexts;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace CnC.Percistance.Repositories;
 
@@ -12,6 +13,14 @@ public class ProductRepository : Repository<Product>, IProductReadRepository, IP
     public ProductRepository(AppDbContext context) : base(context)
     {
         _context = context;
+    }
+
+    public async Task<Product?> GetByIdWithCurrenciesAsync(Guid id, CancellationToken ct=default)
+    {
+        return await _context.Products
+            .Include(p => p.ProductCurrencies) 
+            .Include(p=>p.ProductDescription)
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
     public async Task<CurrencyRate?> GetCurrencyRateByCodeAsync(string currencyCode)

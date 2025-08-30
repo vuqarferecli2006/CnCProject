@@ -1,5 +1,7 @@
 ﻿using CnC.Application.Features.Product.Commands.Create;
+using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
+using CnC.Application.Features.ProductDescription.Commands.Update;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,6 +26,20 @@ namespace CnC.WepApi.Controllers.Product
 
         [HttpPost]
         public async Task<IActionResult> CreateProductDescription([FromForm] CreateProductDescriptionRequest request)
+        {
+            var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductCommandRequest request)
+        {
+            var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateProductDescription([FromForm] UpdateProductDescriptionRequest request)
         {
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);

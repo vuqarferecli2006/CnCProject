@@ -6,4 +6,6 @@ namespace CnC.Application.Abstracts.Repositories.IProductRepositories;
 public interface IProductReadRepository:IReadRepository<Product>
 {
     Task<CurrencyRate?> GetCurrencyRateByCodeAsync(string currencyCode);
+
+    Task<Product?> GetByIdWithCurrenciesAsync(Guid id, CancellationToken ct);
 }
