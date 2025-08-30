@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Features.User.Commands.Email;
+using CnC.Application.Features.User.Commands.Email.ChangePaswword;
 using CnC.Application.Features.User.Commands.Email.ConfirmEmail;
 using CnC.Application.Features.User.Commands.Email.PasswordReset.ResetPassword;
 using CnC.Application.Features.User.Commands.Email.PasswordReset.SendResetEmail;
@@ -75,6 +76,7 @@ public class UsersController : ControllerBase
         var response = await _mediator.Send(request);
         return StatusCode((int)response.StatusCode, response);
     }
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> Logout([FromBody] LogoutUserCommandRequest request)
@@ -103,6 +105,14 @@ public class UsersController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommandRequest request)
+    {
+        var response = await _mediator.Send(request);
+        return StatusCode((int)response.StatusCode, response);
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommandRequest request)
     {
         var response = await _mediator.Send(request);
         return StatusCode((int)response.StatusCode, response);

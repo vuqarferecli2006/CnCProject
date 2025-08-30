@@ -195,6 +195,11 @@ namespace CnC.Percistance.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -203,7 +208,7 @@ namespace CnC.Percistance.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("ParentCategoryId")
+                    b.Property<Guid?>("ParentCategoryId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -214,6 +219,36 @@ namespace CnC.Percistance.Migrations
                     b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("CnC.Domain.Entities.CurrencyRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("RateAgainstAzn")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CurrencyRates");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.Download", b =>
@@ -230,7 +265,8 @@ namespace CnC.Percistance.Migrations
 
                     b.Property<string>("FileUrl")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -238,13 +274,17 @@ namespace CnC.Percistance.Migrations
                     b.Property<Guid>("OrderProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ProductFilesId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderProductId")
-                        .IsUnique();
+                    b.HasIndex("OrderProductId");
+
+                    b.HasIndex("ProductFilesId");
 
                     b.ToTable("Downloads");
                 });
@@ -460,21 +500,12 @@ namespace CnC.Percistance.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Curreny")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<decimal>("DiscountedPercent")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -486,9 +517,8 @@ namespace CnC.Percistance.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                    b.Property<decimal>("PriceAzn")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");
@@ -530,6 +560,39 @@ namespace CnC.Percistance.Migrations
                     b.ToTable("ProductBaskets");
                 });
 
+            modelBuilder.Entity("CnC.Domain.Entities.ProductCurrency", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("ConvertedPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CurrencyRateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyRateId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductCurrencies");
+                });
+
             modelBuilder.Entity("CnC.Domain.Entities.ProductDescription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -541,8 +604,7 @@ namespace CnC.Percistance.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("DiscountedPercent")
                         .HasPrecision(5, 2)
@@ -579,6 +641,36 @@ namespace CnC.Percistance.Migrations
                         .IsUnique();
 
                     b.ToTable("ProductDescriptions");
+                });
+
+            modelBuilder.Entity("CnC.Domain.Entities.ProductFiles", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductDescriptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductDescriptionId");
+
+                    b.ToTable("ProductFiles");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.ProductView", b =>
@@ -785,8 +877,7 @@ namespace CnC.Percistance.Migrations
                     b.HasOne("CnC.Domain.Entities.Category", "ParentCategory")
                         .WithMany("SubCategories")
                         .HasForeignKey("ParentCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
                 });
@@ -794,12 +885,20 @@ namespace CnC.Percistance.Migrations
             modelBuilder.Entity("CnC.Domain.Entities.Download", b =>
                 {
                     b.HasOne("CnC.Domain.Entities.OrderProduct", "OrderProduct")
-                        .WithOne("Download")
-                        .HasForeignKey("CnC.Domain.Entities.Download", "OrderProductId")
+                        .WithMany("Downloads")
+                        .HasForeignKey("OrderProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CnC.Domain.Entities.ProductFiles", "ProductFiles")
+                        .WithMany("Downloads")
+                        .HasForeignKey("ProductFilesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("OrderProduct");
+
+                    b.Navigation("ProductFiles");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.Order", b =>
@@ -889,6 +988,25 @@ namespace CnC.Percistance.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("CnC.Domain.Entities.ProductCurrency", b =>
+                {
+                    b.HasOne("CnC.Domain.Entities.CurrencyRate", "CurrencyRate")
+                        .WithMany()
+                        .HasForeignKey("CurrencyRateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CnC.Domain.Entities.Product", "Product")
+                        .WithMany("ProductCurrencies")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CurrencyRate");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("CnC.Domain.Entities.ProductDescription", b =>
                 {
                     b.HasOne("CnC.Domain.Entities.Product", "Product")
@@ -898,6 +1016,17 @@ namespace CnC.Percistance.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("CnC.Domain.Entities.ProductFiles", b =>
+                {
+                    b.HasOne("CnC.Domain.Entities.ProductDescription", "ProductDescription")
+                        .WithMany("ProductFiles")
+                        .HasForeignKey("ProductDescriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductDescription");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.ProductView", b =>
@@ -1006,8 +1135,7 @@ namespace CnC.Percistance.Migrations
 
             modelBuilder.Entity("CnC.Domain.Entities.OrderProduct", b =>
                 {
-                    b.Navigation("Download")
-                        .IsRequired();
+                    b.Navigation("Downloads");
                 });
 
             modelBuilder.Entity("CnC.Domain.Entities.PaymentMethod", b =>
@@ -1023,10 +1151,22 @@ namespace CnC.Percistance.Migrations
 
                     b.Navigation("ProductBaskets");
 
+                    b.Navigation("ProductCurrencies");
+
                     b.Navigation("ProductDescription")
                         .IsRequired();
 
                     b.Navigation("ProductViews");
+                });
+
+            modelBuilder.Entity("CnC.Domain.Entities.ProductDescription", b =>
+                {
+                    b.Navigation("ProductFiles");
+                });
+
+            modelBuilder.Entity("CnC.Domain.Entities.ProductFiles", b =>
+                {
+                    b.Navigation("Downloads");
                 });
 #pragma warning restore 612, 618
         }

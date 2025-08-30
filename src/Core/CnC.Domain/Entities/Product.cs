@@ -6,15 +6,11 @@ public class Product:BaseEntity
 
     public string PreviewImageUrl { get; set; } = null!;
 
-    public decimal Price { get; set; }
-
     public decimal DiscountedPercent { get; set; }
 
-    public string Model { get; set; } = null!;
-
-    public string Curreny { get; set; } = null!;
-
     public int Score { get; set; }
+
+    public decimal PriceAzn { get; set; }
 
     public Guid CategoryId { get; set; }
 
@@ -25,6 +21,8 @@ public class Product:BaseEntity
     public AppUser User { get; set; } = null!;
 
     public ProductDescription ProductDescription { get; set; } = null!;
+
+    public ICollection<ProductCurrency> ProductCurrencies { get; set; } = new List<ProductCurrency>();
 
     public ICollection<ProductBasket> ProductBaskets { get; set; } = new List<ProductBasket>();
 

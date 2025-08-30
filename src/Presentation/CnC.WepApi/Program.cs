@@ -1,14 +1,19 @@
+﻿using CnC.Application.Abstracts.Services;
 using CnC.Application.Features.User.Commands.Register;
 using CnC.Application.Shared.Helpers.PermissionHelpers;
 using CnC.Application.Shared.Settings;
 using CnC.Domain.Entities;
+using CnC.Infrastructure.Services;
 using CnC.Percistance;
 using CnC.Percistance.Contexts;
 using CnC.WepApi.MiddleWare;
+using Hangfire;
+using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -24,7 +29,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
 
-    // JWT Authentication ���n Swagger konfiqurasiyas?
+    // JWT Authentication üçün Swagger konfiqurasiyas?
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -54,8 +59,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
+builder.Services.AddHttpClient<ICurrencyService, CurrencyService>();
+
+
 builder.Services.AddDbContext<AppDbContext>(options=> 
         options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+
+builder.Services.AddHangfire(configuration =>
+    configuration.UseStorage(
+        new PostgreSqlStorage(
+            builder.Configuration.GetConnectionString("Default"),
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire",
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                InvisibilityTimeout = TimeSpan.FromMinutes(5)
+                // Burada əlavə ayarlar da əlavə edə bilərsən
+            })));
+
+builder.Services.AddHangfireServer();
+
 builder.Services.AddIdentity<AppUser, IdentityRole>(
 options =>
 {
@@ -78,6 +103,9 @@ builder.Services.Configure<RabbitMqSettings>(
 
 builder.Services.Configure<GoogleSetting>(
     builder.Configuration.GetSection("Google"));
+
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.Configure<FaceBookSetting>(
     builder.Configuration.GetSection("Facebook"));
@@ -127,22 +155,28 @@ builder.Services.AddAuthentication(options =>
     options.AppSecret = builder.Configuration["Facebook:AppSecret"];
 });
 
-
-builder.Services.AddHttpContextAccessor();
-
 builder.Services.RegisterServices();
 
 var app = builder.Build();
-
-
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHangfireDashboard("/hangfire");
 }
+
+RecurringJob.AddOrUpdate<CurrencyUpdateJob>(
+    "currency-update-job", 
+    job => job.UpdateRatesAsync(), 
+    "0 6 * * *", 
+    new RecurringJobOptions
+    {
+        TimeZone = TimeZoneInfo.Local
+    }
+);
+app.UseHangfireDashboard();
 
 app.UseHttpsRedirection();
 

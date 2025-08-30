@@ -1,7 +1,7 @@
 ﻿using CnC.Application.Shared.Responses;
 using MediatR;
 
-namespace CnC.Application.Features.User.Commands.Role.Request;
+namespace CnC.Application.Features.User.Commands.Role.CreateRole;
 
 public class CreateRoleCommandRequest:IRequest<BaseResponse<string?>>
 {

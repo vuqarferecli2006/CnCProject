@@ -5,7 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using System.Net;
 
-namespace CnC.Application.Features.User.Commands.Role.Handler;
+namespace CnC.Application.Features.User.Commands.Role.AssignRole;
 
 public class AssingRoleCommandHandler : IRequestHandler<AssignRoleCommandRequest, BaseResponse<string?>>
 {

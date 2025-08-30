@@ -14,6 +14,6 @@ public class OrderProduct:BaseEntity
 
     public Product Product { get; set; } = null!;
 
-    public Download Download { get;set; } = null!;
+    public ICollection<Download> Downloads { get; set; } = new List<Download>();
 }
 

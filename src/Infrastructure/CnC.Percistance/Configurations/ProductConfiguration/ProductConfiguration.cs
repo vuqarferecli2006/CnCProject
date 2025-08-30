@@ -18,18 +18,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired()
             .HasMaxLength(250);
 
-        builder.Property(p => p.Price)
-            .HasPrecision(18, 2);
-
         builder.Property(p => p.DiscountedPercent)
             .HasPrecision(5, 2);
 
-        builder.Property(p => p.Model)
-            .HasMaxLength(100);
-
-        builder.Property(p => p.Curreny)
-            .IsRequired();
-        
         builder.HasOne(p => p.Category)
                .WithMany(c => c.Products)
                .HasForeignKey(p => p.CategoryId);
@@ -57,5 +48,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasMany(p => p.OrderItems)
                .WithOne(op => op.Product)
                .HasForeignKey(op => op.ProductId);
+
+        builder.HasMany(p=> p.ProductCurrencies)
+               .WithOne(pc => pc.Product)
+               .HasForeignKey(pc => pc.ProductId);
     }
 }

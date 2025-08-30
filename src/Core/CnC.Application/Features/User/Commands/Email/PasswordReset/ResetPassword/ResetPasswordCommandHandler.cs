@@ -27,6 +27,10 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommandR
         var decodedBytes = WebEncoders.Base64UrlDecode(request.Token);
         var decodedToken = Encoding.UTF8.GetString(decodedBytes);
 
+        var checkPassword=await _userManager.CheckPasswordAsync(user,request.Password);
+        if(checkPassword)
+            return new("New password cannot be the same as the old password",HttpStatusCode.BadRequest);
+
         var result = await _userManager.ResetPasswordAsync(user, decodedToken, request.Password);
         if (!result.Succeeded)
         {
