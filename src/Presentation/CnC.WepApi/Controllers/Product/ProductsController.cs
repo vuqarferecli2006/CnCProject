@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Features.Product.Commands.Create;
+using CnC.Application.Features.Product.Commands.Delete;
 using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
 using CnC.Application.Features.ProductDescription.Commands.Update;
@@ -40,6 +41,13 @@ namespace CnC.WepApi.Controllers.Product
 
         [HttpPut]
         public async Task<IActionResult> UpdateProductDescription([FromForm] UpdateProductDescriptionRequest request)
+        {
+            var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteProduct([FromQuery] DeleteProductCommandRequest request)
         {
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
