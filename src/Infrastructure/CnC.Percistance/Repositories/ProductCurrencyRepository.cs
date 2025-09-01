@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CnC.Percistance.Repositories;
 
-public class ProductCurrencyWriteRepository : Repository<ProductCurrency>, IProductCurrencyWriteRepository
+public class ProductCurrencyRepository : Repository<ProductCurrency>, IProductCurrencyWriteRepository, IProductCurrencyReadRepository
 {
     private readonly AppDbContext _context;
    
-    public ProductCurrencyWriteRepository(AppDbContext context) : base(context)
+    public ProductCurrencyRepository(AppDbContext context) : base(context)
     {
         _context = context;
     }

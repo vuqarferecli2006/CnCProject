@@ -32,6 +32,11 @@ public class Repository<T> : IReadRepository<T>, IWriteRepository<T> where T : B
         Table.Remove(entity);
     }
 
+    public void DeleteRange(IEnumerable<T> entities)
+    {
+        Table.RemoveRange(entities);
+    }
+
     public async Task<T?> GetByIdAsync(Guid id)
     {
        return await Table.FindAsync(id);

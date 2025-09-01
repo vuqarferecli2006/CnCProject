@@ -10,5 +10,7 @@ public interface IWriteRepository<T> where T : BaseEntity
 
     void Delete(T entity);
 
+    void DeleteRange(IEnumerable<T> entities);
+
     Task SaveChangeAsync();
 }

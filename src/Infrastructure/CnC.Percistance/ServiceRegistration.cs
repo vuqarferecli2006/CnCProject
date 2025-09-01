@@ -23,8 +23,9 @@ public static class ServiceRegistration
             services.AddScoped<ICategoryWriteRepository, CategoryRepository>();
             services.AddScoped<IProductReadRepository, ProductRepository>();
             services.AddScoped<IProductWriteRepository, ProductRepository>();
-            services.AddScoped<IProductCurrencyWriteRepository, ProductCurrencyWriteRepository>();
-            services.AddScoped<IProductDescriptionReadRepository, ProductDescriptionRepository>();
+            services.AddScoped<IProductCurrencyWriteRepository, ProductCurrencyRepository>();
+            services.AddScoped<IProductCurrencyReadRepository, ProductCurrencyRepository>();
+        services.AddScoped<IProductDescriptionReadRepository, ProductDescriptionRepository>();
             services.AddScoped<IProductDescriptionWriteRepository, ProductDescriptionRepository>();
             services.AddScoped<IProductFilesWriteRepository, ProductFilesRepository>();
         #endregion

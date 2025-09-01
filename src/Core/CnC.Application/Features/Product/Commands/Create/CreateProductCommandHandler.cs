@@ -21,13 +21,15 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ICurrencyService _currencyService;
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
+    private readonly IProductCurrencyReadRepository _productCurrencyReadRepository;
 
     public CreateProductCommandHandler(IProductReadRepository productReadRepository,
                                     IProductWriteRepository productWriteRepository,
                                     IFileServices fileServices,
                                     IHttpContextAccessor httpContextAccessor,
                                     ICurrencyService currencyService,
-                                    IProductCurrencyWriteRepository productCurrencyWriteRepository)
+                                    IProductCurrencyWriteRepository productCurrencyWriteRepository,
+                                    IProductCurrencyReadRepository productCurrencyReadRepository)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
@@ -35,6 +37,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         _httpContextAccessor = httpContextAccessor;
         _currencyService = currencyService;
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
+        _productCurrencyReadRepository = productCurrencyReadRepository;
     }
 
     public async Task<BaseResponse<string>> Handle(CreateProductCommandRequest request, CancellationToken cancellationToken)
@@ -46,7 +49,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
 
         var previewUrl = await _fileService.UploadAsync(request.PreviewImageUrl, "product-preview");
 
-        var existingProduct = await _productReadRepository.GetAll().Where(p=>p.Name.ToLower().Trim()==request.Name.ToLower().Trim()).ToListAsync();
+        var existingProduct = await _productReadRepository.GetAll()
+            .Where(p => p.Name.ToLower().Trim() == request.Name.ToLower().Trim())
+            .ToListAsync();
 
         if (existingProduct.Any())
             return new("A product with the same name already exists.", HttpStatusCode.BadRequest);
@@ -57,12 +62,12 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
 
         var product = new Domain.Entities.Product
         {
-            Name = request.Name, 
+            Name = request.Name,
             CategoryId = request.CategoryId,
             PreviewImageUrl = previewUrl,
             DiscountedPercent = request.DiscountedPercent,
             UserId = userId,
-            PriceAzn = request.PriceAzn, 
+            PriceAzn = request.PriceAzn,
         };
 
         await _productWriteRepository.AddAsync(product);
@@ -75,6 +80,16 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
 
     private async Task UpdateProductCurrenciesAsync(Domain.Entities.Product product, decimal effectivePrice)
     {
+        var existingCurrencies = await _productCurrencyReadRepository.GetAll()
+            .Where(pc => pc.ProductId == product.Id)
+            .ToListAsync();
+
+        if (existingCurrencies.Any())
+        {
+            _productCurrencyWriteRepository.DeleteRange(existingCurrencies);
+            await _productCurrencyWriteRepository.SaveChangeAsync();
+        }
+
         var currencies = new[] { "USD", "EUR", "TRY" };
 
         foreach (var code in currencies)
@@ -92,7 +107,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
                     ProductId = product.Id,
                     CurrencyRateId = currencyRate.Id,
                     ConvertedPrice = convertedPrice,
-                    CreatedAt = DateTime.UtcNow.Date
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 await _productCurrencyWriteRepository.AddAsync(productCurrency);
