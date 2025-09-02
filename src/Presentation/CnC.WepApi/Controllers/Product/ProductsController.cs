@@ -3,6 +3,7 @@ using CnC.Application.Features.Product.Commands.Delete;
 using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
 using CnC.Application.Features.ProductDescription.Commands.Update;
+using CnC.Application.Features.ProductDescription.Queries.GetByIdDescription;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,6 +51,13 @@ namespace CnC.WepApi.Controllers.Product
         public async Task<IActionResult> DeleteProduct([FromQuery] DeleteProductCommandRequest request)
         {
             var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductDescriptionById([FromQuery]GetByIdDescriptionQueryRequest request)
+        {
+            var response = await _mediator.Send(new GetByIdDescriptionQueryRequest { ProductId=request.ProductId,Currency=request.Currency} );
             return StatusCode((int)response.StatusCode, response);
         }
     }

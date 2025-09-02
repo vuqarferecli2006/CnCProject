@@ -56,9 +56,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         if (existingProduct.Any())
             return new("A product with the same name already exists.", HttpStatusCode.BadRequest);
 
-        decimal discountedPriceAzn = request.DiscountedPercent > 0
+        decimal priceToSet = request.DiscountedPercent > 0
             ? request.PriceAzn * (1 - request.DiscountedPercent / 100m)
-            : request.PriceAzn;
+            : request.PriceAzn; 
 
         var product = new Domain.Entities.Product
         {
@@ -67,18 +67,18 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
             PreviewImageUrl = previewUrl,
             DiscountedPercent = request.DiscountedPercent,
             UserId = userId,
-            PriceAzn = request.PriceAzn,
+            PriceAzn = priceToSet, 
         };
 
         await _productWriteRepository.AddAsync(product);
         await _productWriteRepository.SaveChangeAsync();
 
-        await UpdateProductCurrenciesAsync(product, discountedPriceAzn);
+        await UpdateProductCurrenciesAsync(product);
 
         return new("Product created successfully", product.Name, true, HttpStatusCode.Created);
     }
 
-    private async Task UpdateProductCurrenciesAsync(Domain.Entities.Product product, decimal effectivePrice)
+    private async Task UpdateProductCurrenciesAsync(Domain.Entities.Product product)
     {
         var existingCurrencies = await _productCurrencyReadRepository.GetAll()
             .Where(pc => pc.ProductId == product.Id)
@@ -96,7 +96,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         {
             var rateToAzn = await _currencyService.ConvertAsync(1, code, "AZN");
 
-            var convertedPrice = Math.Round(effectivePrice / rateToAzn, 2);
+            var convertedPrice = Math.Round(product.PriceAzn / rateToAzn, 2); 
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
 

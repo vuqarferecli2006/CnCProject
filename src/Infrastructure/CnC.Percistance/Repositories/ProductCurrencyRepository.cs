@@ -20,4 +20,5 @@ public class ProductCurrencyRepository : Repository<ProductCurrency>, IProductCu
             .Where(c => c.ProductId == productId && !c.IsDeleted) 
             .ToListAsync();
     }
+
 }

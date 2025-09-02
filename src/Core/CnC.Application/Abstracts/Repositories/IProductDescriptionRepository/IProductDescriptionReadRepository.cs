@@ -6,5 +6,7 @@ namespace CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 
 public interface IProductDescriptionReadRepository:IReadRepository<ProductDescription>
 {
-    Task<ProductDescription?> GetByIdWithFilesAsync(Guid id, CancellationToken ct = default);
+    Task<ProductDescription?> GetByIdWithFilesAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<ProductDescription?> GetProductDescriptionByIdAsync(Guid productId, CancellationToken cancellationToken);
 }

@@ -61,14 +61,12 @@ public class CurrencyUpdateJob
             .ToListAsync();
 
         var products = await _context.Products
-            .Where(p => !p.IsDeleted) 
+            .Where(p => !p.IsDeleted)
             .ToListAsync();
 
         foreach (var product in products)
         {
-            decimal effectivePrice = product.DiscountedPercent > 0
-                ? product.PriceAzn * (1 - product.DiscountedPercent / 100m)
-                : product.PriceAzn;
+            decimal effectivePrice = product.PriceAzn;
 
             foreach (var rate in todayRates)
             {
@@ -86,5 +84,4 @@ public class CurrencyUpdateJob
 
         await _context.SaveChangesAsync();
     }
-
 }

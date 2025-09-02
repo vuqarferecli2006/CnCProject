@@ -11,4 +11,6 @@ public interface IProductReadRepository:IReadRepository<Product>
     Task<Product?> GetByIdWithCurrenciesAsync(Guid id, CancellationToken ct);
 
     Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+
 }

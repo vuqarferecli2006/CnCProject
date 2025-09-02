@@ -47,8 +47,11 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
 
         productExists.Name = request.Name;
         productExists.DiscountedPercent = request.DiscountedPercent;
-        productExists.PriceAzn = request.PriceAzn;
         productExists.CategoryId = request.NewCategoryId;
+
+        productExists.PriceAzn=request.DiscountedPercent>0
+            ? request.PriceAzn * (1 - request.DiscountedPercent / 100m)
+            : request.PriceAzn;
 
         if (request.PreviewImageUrl is not null)
         {
@@ -68,9 +71,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
 
 
         if (productExists.ProductDescription != null)
-        {
             productExists.ProductDescription.DiscountedPercent = productExists.DiscountedPercent;
-        }
 
         _productWriteRepository.Update(productExists);
         await _productWriteRepository.SaveChangeAsync();
@@ -87,7 +88,8 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
             var convertedPrice = Math.Round(effectivePrice * rateFromAzn, 2);
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
-            if (currencyRate == null) continue;
+            if (currencyRate == null) 
+                continue;
 
             var existingCurrency = product.ProductCurrencies
                 ?.FirstOrDefault(pc => pc.CurrencyRateId == currencyRate.Id);
