@@ -20,6 +20,7 @@ public static class ServiceRegistration
 
 
         #region Repository
+        
             services.AddScoped<ICategoryReadRepository, CategoryRepository>();
             services.AddScoped<ICategoryWriteRepository, CategoryRepository>();
             services.AddScoped<IProductReadRepository, ProductRepository>();
@@ -31,19 +32,22 @@ public static class ServiceRegistration
             services.AddScoped<ICurrencyRateReadRepository, CurrencyRateRepository>();
             services.AddScoped<ICurrencyRateWriteRepository, CurrencyRateRepository>();
             services.AddScoped<IProductFilesWriteRepository, ProductFilesRepository>();
+       
         #endregion
 
 
 
 
         #region Services
-        services.AddSingleton<EmailConsumer>();
+
+            services.AddSingleton<EmailConsumer>();
             services.AddScoped<RoleCreationHelper>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailQueueService, RabbitMqEmailQueueService>();
             services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService>();
             services.AddScoped<IFileServices, CloudinaryUploadService>();
+            services.AddScoped<IElasticProductService, ElasticProductService>();
             services.AddTransient<CurrencyUpdateJob>();
             services.AddHttpContextAccessor();
 

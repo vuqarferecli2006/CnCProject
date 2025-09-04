@@ -22,6 +22,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
     private readonly ICurrencyService _currencyService;
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
     private readonly IProductCurrencyReadRepository _productCurrencyReadRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public CreateProductCommandHandler(IProductReadRepository productReadRepository,
                                     IProductWriteRepository productWriteRepository,
@@ -29,7 +30,8 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
                                     IHttpContextAccessor httpContextAccessor,
                                     ICurrencyService currencyService,
                                     IProductCurrencyWriteRepository productCurrencyWriteRepository,
-                                    IProductCurrencyReadRepository productCurrencyReadRepository)
+                                    IProductCurrencyReadRepository productCurrencyReadRepository,
+                                    IElasticProductService elasticProductService)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
@@ -38,6 +40,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         _currencyService = currencyService;
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
         _productCurrencyReadRepository = productCurrencyReadRepository;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<string>> Handle(CreateProductCommandRequest request, CancellationToken cancellationToken)
@@ -74,6 +77,18 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         await _productWriteRepository.SaveChangeAsync();
 
         await UpdateProductCurrenciesAsync(product);
+
+        var elasticSearchRespone = new ElasticSearchResponse
+        {
+            Id = product.Id,
+            Name=product.Name,
+            PreviewImageUrl=product.PreviewImageUrl,
+            Price=product.PriceAzn,
+            DiscountedPercent=product.DiscountedPercent,
+            CategoryId=product.CategoryId
+        };
+
+        await _elasticProductService.IndexProductAsync(elasticSearchRespone);
 
         return new("Product created successfully", product.Name, true, HttpStatusCode.Created);
     }

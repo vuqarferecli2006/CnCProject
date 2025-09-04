@@ -17,13 +17,15 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
     private readonly IFileServices _fileService;
     private readonly ICurrencyService _currencyService;
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public UpdateProductCommandHandler(IProductWriteRepository productWriteRepository,
                                     IProductReadRepository productReadRepository, 
                                     IFileServices fileService,
                                     ICategoryReadRepository categoryReadRepository,
                                     ICurrencyService currencyService,
-                                    IProductCurrencyWriteRepository productCurrencyWriteRepository)
+                                    IProductCurrencyWriteRepository productCurrencyWriteRepository,
+                                    IElasticProductService elasticProductService)
     {
         _productWriteRepository = productWriteRepository;
         _productReadRepository = productReadRepository;
@@ -31,6 +33,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
         _categoryReadRepository = categoryReadRepository;
         _currencyService = currencyService;
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<string>> Handle(UpdateProductCommandRequest request, CancellationToken cancellationToken)
@@ -75,6 +78,18 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
 
         _productWriteRepository.Update(productExists);
         await _productWriteRepository.SaveChangeAsync();
+
+        var elasticSearchResponse = new ElasticSearchResponse
+        {
+            Id=productExists.Id,
+            Name=productExists.Name,
+            PreviewImageUrl=productExists.PreviewImageUrl,
+            Price=productExists.PriceAzn,
+            DiscountedPercent=productExists.DiscountedPercent,
+            CategoryId=productExists.CategoryId,
+        };
+
+        await _elasticProductService.UpdateProductAsync(elasticSearchResponse);
 
         return new("Product updated successfully", productExists.Name, true, HttpStatusCode.OK);
     }

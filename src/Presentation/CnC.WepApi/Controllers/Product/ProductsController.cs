@@ -1,4 +1,7 @@
-﻿using CnC.Application.Features.Product.Commands.Create;
+﻿using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
+using CnC.Application.Abstracts.Services;
+using CnC.Application.DTOs.ElasticSearch;
+using CnC.Application.Features.Product.Commands.Create;
 using CnC.Application.Features.Product.Commands.Delete;
 using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
@@ -14,9 +17,13 @@ namespace CnC.WepApi.Controllers.Product
     public class ProductsController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public ProductsController(IMediator mediator)
+        private readonly IElasticProductService _elasticProductService;
+        private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
+        public ProductsController(IMediator mediator, ICurrencyRateReadRepository currencyRateReadRepository, IElasticProductService elasticProductService)
         {
             _mediator = mediator;
+            _currencyRateReadRepository = currencyRateReadRepository;
+            _elasticProductService = elasticProductService;
         }
 
         [HttpPost]
@@ -60,5 +67,13 @@ namespace CnC.WepApi.Controllers.Product
             var response = await _mediator.Send(new GetByIdDescriptionQueryRequest { ProductId=request.ProductId,Currency=request.Currency} );
             return StatusCode((int)response.StatusCode, response);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Search([FromQuery] ElasticSearchProductDto dto, CancellationToken cancellationToken)
+        {
+            var result = await _elasticProductService.SearchAsync(dto, cancellationToken);
+            return Ok(result);
+        }
+
     }
 }

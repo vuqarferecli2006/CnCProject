@@ -2,6 +2,7 @@
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
+using CnC.Application.Abstracts.Services;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Enums;
 using MediatR;
@@ -13,19 +14,25 @@ public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescript
 {
     private readonly IProductDescriptionReadRepository _productDescriptionReadRepository;
     private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
+    private readonly IProductWriteRepository _productWriteRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public GetProductDescriptionQueryHandler(IProductDescriptionReadRepository productDescriptionReadRepository,
-                                        ICurrencyRateReadRepository currencyRateReadRepository)
+                                        ICurrencyRateReadRepository currencyRateReadRepository,
+                                        IProductWriteRepository productWriteRepository,
+                                        IElasticProductService elasticProductService)
     {
         _productDescriptionReadRepository = productDescriptionReadRepository;
         _currencyRateReadRepository = currencyRateReadRepository;
+        _productWriteRepository = productWriteRepository;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<ProductDescriptionResponse>> Handle(GetByIdDescriptionQueryRequest request, CancellationToken cancellationToken)
     {
         var productDescription = await _productDescriptionReadRepository.GetProductDescriptionByIdAsync(request.ProductId, cancellationToken);
 
-        if (productDescription == null)
+        if (productDescription is null)
             return new("Product not found", HttpStatusCode.NotFound);
         
         decimal convertedPrice;
@@ -42,7 +49,14 @@ public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescript
             convertedPrice = productDescription.Product.PriceAzn / currencyRate.RateAgainstAzn;
         }
 
-        convertedPrice = Math.Round(convertedPrice, 2); 
+        convertedPrice = Math.Round(convertedPrice, 2);
+
+        productDescription.ViewCount++;
+
+        await _productWriteRepository.SaveChangeAsync();
+
+        await _elasticProductService.UpdateProductViewCountAsync(productDescription.ProductId, productDescription.ViewCount);
+
         var response = new ProductDescriptionResponse
         {
             ProductId = productDescription.ProductId,

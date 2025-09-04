@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Nest;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -121,6 +122,15 @@ builder.Services.AddAuthorization(options =>
     }
 });
 
+var elasticUri = builder.Configuration["ElasticsearchSettings:Uri"] ?? "http://localhost:9201";
+
+builder.Services.AddSingleton<IElasticClient>(sp =>
+{
+    var settings = new ConnectionSettings(new Uri(elasticUri))
+        .DefaultIndex("products");
+
+    return new ElasticClient(settings);
+});
 builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthentication(options =>

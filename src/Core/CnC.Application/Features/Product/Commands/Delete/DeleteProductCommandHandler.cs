@@ -18,6 +18,7 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
     private readonly IProductFilesWriteRepository _productFilesWriteRepository;
     private readonly IFileServices _fileService;
+    private readonly IElasticProductService _elasticProductService;
 
     public DeleteProductCommandHandler(
         IProductWriteRepository productWriteRepository,
@@ -26,7 +27,8 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
         IProductDescriptionReadRepository productDescriptionReadRepository,
         IProductCurrencyWriteRepository productCurrencyWriteRepository,
         IProductFilesWriteRepository productFilesWriteRepository,
-        IFileServices fileService)
+        IFileServices fileService,
+        IElasticProductService elasticProductService)
     {
         _productWriteRepository = productWriteRepository;
         _productReadRepository = productReadRepository;
@@ -35,6 +37,7 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
         _productFilesWriteRepository = productFilesWriteRepository;
         _fileService = fileService;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<string>> Handle(DeleteProductCommandRequest request, CancellationToken cancellationToken)
@@ -46,35 +49,35 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
         if (!string.IsNullOrEmpty(product.PreviewImageUrl))
             await _fileService.DeleteFileAsync(product.PreviewImageUrl);
 
-        if (product.ProductDescription == null)
-            return new("Product description not found", HttpStatusCode.NotFound);
-
-        var description = await _productDescriptionReadRepository.GetByIdWithFilesAsync(product.ProductDescription.Id, cancellationToken);
-        if (description == null)
-            return new ("Description not found", HttpStatusCode.NotFound);
-
-        if (!string.IsNullOrEmpty(description.ImageUrl))
-            await _fileService.DeleteFileAsync(description.ImageUrl);
-
-        foreach (var file in description.ProductFiles.ToList())
+        if (product.ProductDescription != null)
         {
-            if (!string.IsNullOrEmpty(file.FileUrl))
-                await _fileService.DeleteFileAsync(file.FileUrl);
-            _productFilesWriteRepository.Delete(file);
-        }
-        await _productFilesWriteRepository.SaveChangeAsync();
+            var description = await _productDescriptionReadRepository.GetByIdWithFilesAsync(product.ProductDescription.Id, cancellationToken);
+            if (description != null)
+            {
+                if (!string.IsNullOrEmpty(description.ImageUrl))
+                    await _fileService.DeleteFileAsync(description.ImageUrl);
 
-        description.IsDeleted = true;
-        description.UpdatedAt = DateTime.UtcNow;
-        _productDescriptionWriteRepository.Update(description);
-        await _productDescriptionWriteRepository.SaveChangeAsync();
+                foreach (var file in description.ProductFiles.ToList())
+                {
+                    if (!string.IsNullOrEmpty(file.FileUrl))
+                        await _fileService.DeleteFileAsync(file.FileUrl);
+
+                    _productFilesWriteRepository.Delete(file);
+                }
+                await _productFilesWriteRepository.SaveChangeAsync();
+
+                description.IsDeleted = true;
+                description.UpdatedAt = DateTime.UtcNow;
+                _productDescriptionWriteRepository.Update(description);
+                await _productDescriptionWriteRepository.SaveChangeAsync();
+            }
+        }
 
         var currencies = await _productCurrencyWriteRepository.GetByProductIdAsync(request.ProductId);
-
         foreach (var currency in currencies)
         {
             currency.IsDeleted = true;
-            _productCurrencyWriteRepository.Update(currency); 
+            _productCurrencyWriteRepository.Update(currency);
         }
         await _productCurrencyWriteRepository.SaveChangeAsync();
 
@@ -83,7 +86,9 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
         _productWriteRepository.Update(product);
         await _productWriteRepository.SaveChangeAsync();
 
-        return new("Product and related files/images deleted successfully", true, HttpStatusCode.OK);
+        await _elasticProductService.DeleteProductAsync(request.ProductId);
+
+        return new("Product deleted successfully", true, HttpStatusCode.OK);
     }
 }
 
