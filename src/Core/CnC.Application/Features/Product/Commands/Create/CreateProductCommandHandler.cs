@@ -111,7 +111,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         {
             var rateToAzn = await _currencyService.ConvertAsync(1, code, "AZN");
 
-            var convertedPrice = Math.Round(product.PriceAzn / rateToAzn, 2); 
+            var convertedPrice = Math.Round(product.PriceAzn / rateToAzn, 1); 
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
 

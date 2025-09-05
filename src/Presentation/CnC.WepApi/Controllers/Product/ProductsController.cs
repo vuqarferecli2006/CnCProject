@@ -75,5 +75,11 @@ namespace CnC.WepApi.Controllers.Product
             return Ok(result);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> FilterProduct([FromQuery] FilterProductDto dto, CancellationToken cancellationToken)
+        {
+            var result=await _elasticProductService.FilterProductsAsync(dto, cancellationToken);
+            return Ok(result);
+        }
     }
 }

@@ -70,7 +70,7 @@ public class CurrencyUpdateJob
 
             foreach (var rate in todayRates)
             {
-                var convertedPrice = Math.Round(effectivePrice / rate.RateAgainstAzn, 2);
+                var convertedPrice = Math.Round(effectivePrice / rate.RateAgainstAzn, 1);
 
                 _context.ProductCurrencies.Add(new ProductCurrency
                 {

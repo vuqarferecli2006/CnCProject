@@ -100,7 +100,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
         foreach (var code in currencies)
         {
             var rateFromAzn = await _currencyService.ConvertAsync(1, "AZN", code);
-            var convertedPrice = Math.Round(effectivePrice * rateFromAzn, 2);
+            var convertedPrice = Math.Round(effectivePrice * rateFromAzn, 1);
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
             if (currencyRate == null) 
