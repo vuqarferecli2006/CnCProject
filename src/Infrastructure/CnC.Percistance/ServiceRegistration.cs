@@ -1,5 +1,6 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
 using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
+using CnC.Application.Abstracts.Repositories.IFavouriteRepositories;
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 using CnC.Application.Abstracts.Repositories.IProductFilesRepository;
@@ -32,7 +33,8 @@ public static class ServiceRegistration
             services.AddScoped<ICurrencyRateReadRepository, CurrencyRateRepository>();
             services.AddScoped<ICurrencyRateWriteRepository, CurrencyRateRepository>();
             services.AddScoped<IProductFilesWriteRepository, ProductFilesRepository>();
-       
+            services.AddScoped<IFavouriteReadRepository, FavouriteRepository>();
+            services.AddScoped<IFavouriteWriteRepository, FavouriteRepository>();
         #endregion
 
 

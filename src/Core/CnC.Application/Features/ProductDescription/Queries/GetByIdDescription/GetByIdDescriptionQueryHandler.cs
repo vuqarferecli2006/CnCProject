@@ -49,7 +49,7 @@ public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescript
             convertedPrice = productDescription.Product.PriceAzn / currencyRate.RateAgainstAzn;
         }
 
-        convertedPrice = Math.Round(convertedPrice, 2);
+        convertedPrice = Math.Round(convertedPrice, 1);
 
         productDescription.ViewCount++;
 

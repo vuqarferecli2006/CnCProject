@@ -18,11 +18,9 @@ namespace CnC.WepApi.Controllers.Product
     {
         private readonly IMediator _mediator;
         private readonly IElasticProductService _elasticProductService;
-        private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
-        public ProductsController(IMediator mediator, ICurrencyRateReadRepository currencyRateReadRepository, IElasticProductService elasticProductService)
+        public ProductsController(IMediator mediator, IElasticProductService elasticProductService)
         {
             _mediator = mediator;
-            _currencyRateReadRepository = currencyRateReadRepository;
             _elasticProductService = elasticProductService;
         }
 
