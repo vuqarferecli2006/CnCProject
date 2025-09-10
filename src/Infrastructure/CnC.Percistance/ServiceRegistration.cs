@@ -5,6 +5,7 @@ using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 using CnC.Application.Abstracts.Repositories.IProductFilesRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
+using CnC.Application.Abstracts.Repositories.IProductViewRepositories;
 using CnC.Application.Abstracts.Services;
 using CnC.Application.Shared.Helpers.RoleHelpers;
 using CnC.Infrastructure.Services;
@@ -35,6 +36,8 @@ public static class ServiceRegistration
             services.AddScoped<IProductFilesWriteRepository, ProductFilesRepository>();
             services.AddScoped<IFavouriteReadRepository, FavouriteRepository>();
             services.AddScoped<IFavouriteWriteRepository, FavouriteRepository>();
+            services.AddScoped<IProductViewReadRepository, ProductViewRepository>();
+            services.AddScoped<IProductViewWriteRepository, ProductViewRepository>();
         #endregion
 
 

@@ -2,7 +2,7 @@
 
 public class ProductView:BaseEntity
 {
-    public Guid SessionId { get; set; }
+    public string? SessionId { get; set; }
 
     public DateTime ViewedAt { get; set; } = DateTime.UtcNow;
 
@@ -10,7 +10,7 @@ public class ProductView:BaseEntity
 
     public Product Product { get; set; } = null!;
 
-    public string UserId { get; set; } = null!;
+    public string? UserId { get; set; } = null!;
 
     public AppUser User { get; set; } = null!;
 }

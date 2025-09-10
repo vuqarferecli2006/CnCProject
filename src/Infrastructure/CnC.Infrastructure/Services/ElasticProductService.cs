@@ -103,7 +103,7 @@ public class ElasticProductService : IElasticProductService
                     p.Price = Math.Round(p.Price / rate.RateAgainstAzn, 1);
                 }
             }
-        }
+        }   
 
         return new ("Success",products,true,HttpStatusCode.OK);
     }

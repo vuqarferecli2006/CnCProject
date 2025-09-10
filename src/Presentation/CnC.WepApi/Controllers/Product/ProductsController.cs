@@ -7,6 +7,8 @@ using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
 using CnC.Application.Features.ProductDescription.Commands.Update;
 using CnC.Application.Features.ProductDescription.Queries.GetByIdDescription;
+using CnC.Application.Features.ProductView.Commands.Merge;
+using CnC.Application.Features.ProductView.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -60,9 +62,9 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProductDescriptionById([FromQuery]GetByIdDescriptionQueryRequest request)
+        public async Task<IActionResult> GetProductDescriptionById([FromQuery] GetByIdDescriptionQueryRequest request)
         {
-            var response = await _mediator.Send(new GetByIdDescriptionQueryRequest { ProductId=request.ProductId,Currency=request.Currency} );
+            var response = await _mediator.Send(new GetByIdDescriptionQueryRequest { ProductId = request.ProductId, Currency = request.Currency });
             return StatusCode((int)response.StatusCode, response);
         }
 
@@ -76,8 +78,20 @@ namespace CnC.WepApi.Controllers.Product
         [HttpGet]
         public async Task<IActionResult> FilterProduct([FromQuery] FilterProductDto dto, CancellationToken cancellationToken)
         {
-            var result=await _elasticProductService.FilterProductsAsync(dto, cancellationToken);
+            var result = await _elasticProductService.FilterProductsAsync(dto, cancellationToken);
             return Ok(result);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetProductView([FromQuery] GetUserProductViewsQueryRequest request)
+        {
+            var result = await _mediator.Send(new GetUserProductViewsQueryRequest { Currency = request.Currency });
+            return StatusCode((int)result.StatusCode, result);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Merge([FromBody] MergeProductViewsCommandRequest request)
+        {
+            var result = await _mediator.Send(request);
+            return StatusCode((int)result.StatusCode, result);
         }
     }
 }
