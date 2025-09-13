@@ -1,6 +1,8 @@
-﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
+﻿using CnC.Application.Abstracts.Repositories.IBasketRepositories;
+using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
 using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
 using CnC.Application.Abstracts.Repositories.IFavouriteRepositories;
+using CnC.Application.Abstracts.Repositories.IProductBasketRepositories;
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 using CnC.Application.Abstracts.Repositories.IProductFilesRepository;
@@ -38,6 +40,10 @@ public static class ServiceRegistration
             services.AddScoped<IFavouriteWriteRepository, FavouriteRepository>();
             services.AddScoped<IProductViewReadRepository, ProductViewRepository>();
             services.AddScoped<IProductViewWriteRepository, ProductViewRepository>();
+            services.AddScoped<IBasketReadRepository, BasketRepository>();
+            services.AddScoped<IBasketWriteRepository, BasketRepository>();
+            services.AddScoped<IProductBasketReadRepository, ProductBasketRepository>();
+            services.AddScoped<IProductBasketWriteRepository, ProductBasketRepository>();
         #endregion
 
 
