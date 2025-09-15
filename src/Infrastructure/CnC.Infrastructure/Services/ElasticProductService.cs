@@ -41,6 +41,14 @@ public class ElasticProductService : IElasticProductService
         );
     }
 
+    public async Task UpdateProductScoreAsync(Guid productId, int score)
+    {
+        var response = await _client.UpdateAsync<ElasticSearchResponse, object>(
+            productId, u => u
+                .Index(IndexName)
+                .Doc(new { Score = score })
+        );
+    }
     public async Task DeleteProductAsync(Guid productId)
     {
         await _client.DeleteAsync<ElasticSearchResponse>(productId, d => d.Index(IndexName));

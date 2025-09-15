@@ -15,4 +15,6 @@ public class ProductBasket:BaseEntity
     public Guid BasketId { get; set; }
 
     public Basket Basket { get; set; } = null!;
+
+    public bool IsSelectedForOrder { get; set; } = true;
 }

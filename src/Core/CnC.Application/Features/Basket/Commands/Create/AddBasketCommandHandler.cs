@@ -1,6 +1,7 @@
 ﻿using CnC.Application.Abstracts.Repositories.IBasketRepositories;
 using CnC.Application.Abstracts.Repositories.IProductBasketRepositories;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
+using CnC.Application.Abstracts.Services;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using MediatR;
@@ -18,13 +19,17 @@ public class AddBasketCommandHandler : IRequestHandler<AddBasketCommandRequest, 
     private readonly IProductBasketReadRepository _productBasketReadRepository;
     private readonly IProductBasketWriteRepository _productBasketWriteRepository;
     private readonly IProductReadRepository _productReadRepository;
+    private readonly IProductWriteRepository _productWriteRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public AddBasketCommandHandler(IHttpContextAccessor contextAccessor, 
                                 IBasketReadRepository basketReadRepository, 
                                 IBasketWriteRepository basketWriteRepository, 
                                 IProductBasketReadRepository productBasketReadRepository, 
                                 IProductBasketWriteRepository productBasketWriteRepository,
-                                IProductReadRepository productReadRepository)
+                                IProductReadRepository productReadRepository,
+                                IProductWriteRepository productWriteRepository,
+                                IElasticProductService elasticProductService)
     {
         _contextAccessor = contextAccessor;
         _basketReadRepository = basketReadRepository;
@@ -32,6 +37,9 @@ public class AddBasketCommandHandler : IRequestHandler<AddBasketCommandRequest, 
         _productBasketReadRepository = productBasketReadRepository;
         _productBasketWriteRepository = productBasketWriteRepository;
         _productReadRepository = productReadRepository;
+        _productWriteRepository = productWriteRepository;
+        _elasticProductService = elasticProductService;
+
     }
 
     public async Task<BaseResponse<string>> Handle(AddBasketCommandRequest request, CancellationToken cancellationToken)
@@ -52,6 +60,10 @@ public class AddBasketCommandHandler : IRequestHandler<AddBasketCommandRequest, 
         }
 
         var existingProduct=await _productBasketReadRepository.ExistProductInBasket(basket.Id,request.ProductId,cancellationToken);
+        var product = await _productReadRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product is null)
+            return new("Product not found", HttpStatusCode.NotFound); 
+
         if (existingProduct is not null)
         {
             existingProduct.Quantity ++;
@@ -61,23 +73,26 @@ public class AddBasketCommandHandler : IRequestHandler<AddBasketCommandRequest, 
 
         else
         {
-            var product = await _productReadRepository.GetByIdAsync(request.ProductId, cancellationToken);
-            if (product is null)
-                return new("Product not found", HttpStatusCode.NotFound);
-
             var productBasket = new ProductBasket
             {
                 Id = Guid.NewGuid(),
                 BasketId = basket.Id,
                 ProductId = request.ProductId,
                 Quantity = 1,
+                IsSelectedForOrder = true,
                 TotalPrice = product.PriceAzn,
                 PreviewImageUrl = product.PreviewImageUrl,
             };
             await _productBasketWriteRepository.AddAsync(productBasket);
         }
         await _productBasketWriteRepository.SaveChangeAsync();
-        
+
+        product.Score += 5;
+         _productWriteRepository.Update(product);
+        await _productWriteRepository.SaveChangeAsync();
+
+        await _elasticProductService.UpdateProductScoreAsync(product.Id, product.Score);
+
         return new("Product successfully added to basket", true,HttpStatusCode.OK);
     }
 }

@@ -11,4 +11,5 @@ public interface IElasticProductService
     Task UpdateProductViewCountAsync(Guid productId, int viewCount);
     Task<BaseResponse<List<ElasticSearchResponse>>> SearchAsync(ElasticSearchProductDto dto, CancellationToken cancellationToken);
     Task<BaseResponse<List<ElasticSearchResponse>>> FilterProductsAsync(FilterProductDto dto, CancellationToken cancellationToken);
+    Task UpdateProductScoreAsync(Guid productId, int score);
 }
