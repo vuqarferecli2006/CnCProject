@@ -1,10 +1,10 @@
 ﻿namespace CnC.Domain.Entities;
 
-public class ProductBasket
+public class ProductBasket:BaseEntity
 {
-    public int Quantity { get; set; }
-
     public decimal TotalPrice { get; set; }
+
+    public string PreviewImageUrl { get; set; } = null!;
 
     public Guid ProductId { get; set; }
 
@@ -13,4 +13,6 @@ public class ProductBasket
     public Guid BasketId { get; set; }
 
     public Basket Basket { get; set; } = null!;
+
+    public bool IsSelectedForOrder { get; set; } = true;
 }

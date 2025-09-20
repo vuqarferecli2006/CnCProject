@@ -28,4 +28,12 @@ public class ProductRepository : Repository<Product>, IProductReadRepository, IP
         return await _context.CurrencyRates
            .FirstOrDefaultAsync(cr => cr.CurrencyCode == currencyCode);
     }
+
+    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    { 
+        return await _context.Products
+            .Where(p=>p.Id == id && !p.IsDeleted)
+            .Include(p => p.ProductDescription)  
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+    }
 }

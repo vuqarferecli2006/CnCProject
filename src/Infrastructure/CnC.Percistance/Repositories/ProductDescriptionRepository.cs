@@ -13,10 +13,18 @@ public class ProductDescriptionRepository : Repository<ProductDescription>, IPro
         _context = context;
     }
 
-    public async Task<ProductDescription?> GetByIdWithFilesAsync(Guid id, CancellationToken ct = default)
+    public async Task<ProductDescription?> GetByIdWithFilesAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _context.ProductDescriptions
             .Include(pd => pd.ProductFiles)
-            .FirstOrDefaultAsync(pd => pd.Id == id, ct);
+            .FirstOrDefaultAsync(pd => pd.Id == id, cancellationToken);
+    }
+
+    public async Task<ProductDescription?> GetProductDescriptionByIdAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        return await _context.ProductDescriptions
+            .Include(pd => pd.Product)
+            .ThenInclude(p => p.ProductCurrencies)
+            .FirstOrDefaultAsync(pd => pd.ProductId == productId, cancellationToken);
     }
 }

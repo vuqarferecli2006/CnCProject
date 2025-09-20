@@ -5,5 +5,5 @@ namespace CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 
 public interface IProductCurrencyWriteRepository:IWriteRepository<ProductCurrency>
 {
-
+    Task<IEnumerable<ProductCurrency>> GetByProductIdAsync(Guid productId);
 }

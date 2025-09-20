@@ -6,6 +6,8 @@ public class PaymentMethod:BaseEntity
 {
     public string Name { get; set; } = null!;
 
+    public Currency Currency { get; set; }
+
     public MethodForPayment MethodForPayment { get; set; }
 
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();

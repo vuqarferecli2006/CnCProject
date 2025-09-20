@@ -21,13 +21,17 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ICurrencyService _currencyService;
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
+    private readonly IProductCurrencyReadRepository _productCurrencyReadRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public CreateProductCommandHandler(IProductReadRepository productReadRepository,
                                     IProductWriteRepository productWriteRepository,
                                     IFileServices fileServices,
                                     IHttpContextAccessor httpContextAccessor,
                                     ICurrencyService currencyService,
-                                    IProductCurrencyWriteRepository productCurrencyWriteRepository)
+                                    IProductCurrencyWriteRepository productCurrencyWriteRepository,
+                                    IProductCurrencyReadRepository productCurrencyReadRepository,
+                                    IElasticProductService elasticProductService)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
@@ -35,6 +39,8 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         _httpContextAccessor = httpContextAccessor;
         _currencyService = currencyService;
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
+        _productCurrencyReadRepository = productCurrencyReadRepository;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<string>> Handle(CreateProductCommandRequest request, CancellationToken cancellationToken)
@@ -46,42 +52,66 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
 
         var previewUrl = await _fileService.UploadAsync(request.PreviewImageUrl, "product-preview");
 
-        var existingProduct = await _productReadRepository.GetAll().Where(p=>p.Name.ToLower().Trim()==request.Name.ToLower().Trim()).ToListAsync();
+        var existingProduct = await _productReadRepository.GetAll()
+            .Where(p => p.Name.ToLower().Trim() == request.Name.ToLower().Trim())
+            .ToListAsync();
 
         if (existingProduct.Any())
             return new("A product with the same name already exists.", HttpStatusCode.BadRequest);
 
-        decimal discountedPriceAzn = request.DiscountedPercent > 0
+        decimal priceToSet = request.DiscountedPercent > 0
             ? request.PriceAzn * (1 - request.DiscountedPercent / 100m)
-            : request.PriceAzn;
+            : request.PriceAzn; 
 
         var product = new Domain.Entities.Product
         {
-            Name = request.Name, 
+            Name = request.Name,
             CategoryId = request.CategoryId,
             PreviewImageUrl = previewUrl,
             DiscountedPercent = request.DiscountedPercent,
             UserId = userId,
-            PriceAzn = request.PriceAzn, 
+            PriceAzn = priceToSet, 
         };
 
         await _productWriteRepository.AddAsync(product);
         await _productWriteRepository.SaveChangeAsync();
 
-        await UpdateProductCurrenciesAsync(product, discountedPriceAzn);
+        await UpdateProductCurrenciesAsync(product);
+
+        var elasticSearchRespone = new ElasticSearchResponse
+        {
+            Id = product.Id,
+            Name=product.Name,
+            PreviewImageUrl=product.PreviewImageUrl,
+            Price=product.PriceAzn,
+            DiscountedPercent=product.DiscountedPercent,
+            CategoryId=product.CategoryId
+        };
+
+        await _elasticProductService.IndexProductAsync(elasticSearchRespone);
 
         return new("Product created successfully", product.Name, true, HttpStatusCode.Created);
     }
 
-    private async Task UpdateProductCurrenciesAsync(Domain.Entities.Product product, decimal effectivePrice)
+    private async Task UpdateProductCurrenciesAsync(Domain.Entities.Product product)
     {
+        var existingCurrencies = await _productCurrencyReadRepository.GetAll()
+            .Where(pc => pc.ProductId == product.Id)
+            .ToListAsync();
+
+        if (existingCurrencies.Any())
+        {
+            _productCurrencyWriteRepository.DeleteRange(existingCurrencies);
+            await _productCurrencyWriteRepository.SaveChangeAsync();
+        }
+
         var currencies = new[] { "USD", "EUR", "TRY" };
 
         foreach (var code in currencies)
         {
             var rateToAzn = await _currencyService.ConvertAsync(1, code, "AZN");
 
-            var convertedPrice = Math.Round(effectivePrice / rateToAzn, 2);
+            var convertedPrice = Math.Round(product.PriceAzn / rateToAzn, 1); 
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
 
@@ -92,7 +122,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
                     ProductId = product.Id,
                     CurrencyRateId = currencyRate.Id,
                     ConvertedPrice = convertedPrice,
-                    CreatedAt = DateTime.UtcNow.Date
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 await _productCurrencyWriteRepository.AddAsync(productCurrency);

@@ -1,28 +1,34 @@
-﻿using CnC.Application.Abstracts.Services;
+﻿using CnC.Application.Shared.Helpers.PermissionHelpers;
 using CnC.Application.Features.User.Commands.Register;
-using CnC.Application.Shared.Helpers.PermissionHelpers;
-using CnC.Application.Shared.Settings;
-using CnC.Domain.Entities;
-using CnC.Infrastructure.Services;
-using CnC.Percistance;
-using CnC.Percistance.Contexts;
-using CnC.WepApi.MiddleWare;
-using Hangfire;
-using Hangfire.PostgreSql;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CnC.Application.Abstracts.Services;
+using CnC.Application.Shared.Settings;
+using Microsoft.IdentityModel.Tokens;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
+using CnC.Infrastructure.Services;
+using CnC.Percistance.Contexts;
 using Microsoft.OpenApi.Models;
+using CnC.WepApi.MiddleWare;
+using Hangfire.PostgreSql;
+using CnC.Domain.Entities;
+using CnC.Percistance;
 using System.Text;
+using Hangfire;
+using MediatR;
+using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -121,6 +127,15 @@ builder.Services.AddAuthorization(options =>
     }
 });
 
+var elasticUri = builder.Configuration["ElasticsearchSettings:Uri"] ?? "http://localhost:9201";
+
+builder.Services.AddSingleton<IElasticClient>(sp =>
+{
+    var settings = new ConnectionSettings(new Uri(elasticUri))
+        .DefaultIndex("products");
+
+    return new ElasticClient(settings);
+});
 builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthentication(options =>
@@ -157,7 +172,17 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.RegisterServices();
 
+//builder.Services.AddDistributedMemoryCache();
+//builder.Services.AddSession(options =>
+//{
+//    options.IdleTimeout = TimeSpan.FromMinutes(30);
+//    options.Cookie.HttpOnly = true;
+//    options.Cookie.IsEssential = true;
+//});
+
 var app = builder.Build();
+
+//app.UseSession();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

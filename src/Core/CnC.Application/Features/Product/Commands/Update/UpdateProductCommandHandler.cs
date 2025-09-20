@@ -17,13 +17,15 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
     private readonly IFileServices _fileService;
     private readonly ICurrencyService _currencyService;
     private readonly IProductCurrencyWriteRepository _productCurrencyWriteRepository;
+    private readonly IElasticProductService _elasticProductService;
 
     public UpdateProductCommandHandler(IProductWriteRepository productWriteRepository,
                                     IProductReadRepository productReadRepository, 
                                     IFileServices fileService,
                                     ICategoryReadRepository categoryReadRepository,
                                     ICurrencyService currencyService,
-                                    IProductCurrencyWriteRepository productCurrencyWriteRepository)
+                                    IProductCurrencyWriteRepository productCurrencyWriteRepository,
+                                    IElasticProductService elasticProductService)
     {
         _productWriteRepository = productWriteRepository;
         _productReadRepository = productReadRepository;
@@ -31,6 +33,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
         _categoryReadRepository = categoryReadRepository;
         _currencyService = currencyService;
         _productCurrencyWriteRepository = productCurrencyWriteRepository;
+        _elasticProductService = elasticProductService;
     }
 
     public async Task<BaseResponse<string>> Handle(UpdateProductCommandRequest request, CancellationToken cancellationToken)
@@ -47,8 +50,11 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
 
         productExists.Name = request.Name;
         productExists.DiscountedPercent = request.DiscountedPercent;
-        productExists.PriceAzn = request.PriceAzn;
         productExists.CategoryId = request.NewCategoryId;
+
+        productExists.PriceAzn=request.DiscountedPercent>0
+            ? request.PriceAzn * (1 - request.DiscountedPercent / 100m)
+            : request.PriceAzn;
 
         if (request.PreviewImageUrl is not null)
         {
@@ -68,12 +74,22 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
 
 
         if (productExists.ProductDescription != null)
-        {
             productExists.ProductDescription.DiscountedPercent = productExists.DiscountedPercent;
-        }
 
         _productWriteRepository.Update(productExists);
         await _productWriteRepository.SaveChangeAsync();
+
+        var elasticSearchResponse = new ElasticSearchResponse
+        {
+            Id=productExists.Id,
+            Name=productExists.Name,
+            PreviewImageUrl=productExists.PreviewImageUrl,
+            Price=productExists.PriceAzn,
+            DiscountedPercent=productExists.DiscountedPercent,
+            CategoryId=productExists.CategoryId,
+        };
+
+        await _elasticProductService.UpdateProductAsync(elasticSearchResponse);
 
         return new("Product updated successfully", productExists.Name, true, HttpStatusCode.OK);
     }
@@ -84,10 +100,11 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
         foreach (var code in currencies)
         {
             var rateFromAzn = await _currencyService.ConvertAsync(1, "AZN", code);
-            var convertedPrice = Math.Round(effectivePrice * rateFromAzn, 2);
+            var convertedPrice = Math.Round(effectivePrice * rateFromAzn, 1);
 
             var currencyRate = await _productReadRepository.GetCurrencyRateByCodeAsync(code);
-            if (currencyRate == null) continue;
+            if (currencyRate == null) 
+                continue;
 
             var existingCurrency = product.ProductCurrencies
                 ?.FirstOrDefault(pc => pc.CurrencyRateId == currencyRate.Id);
