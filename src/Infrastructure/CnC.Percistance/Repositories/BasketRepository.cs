@@ -17,4 +17,14 @@ public class BasketRepository : Repository<Basket>, IBasketReadRepository, IBask
     {
         return await _context.Baskets.FirstOrDefaultAsync(b => b.UserId == userId,ct);
     }
+
+    public async Task<Basket?> GetUserBasketWithProductsAsync(string userId, CancellationToken ct)
+    {
+        return await _context.Baskets
+            .Include(b => b.BasketItems)
+                .ThenInclude(bp => bp.Product)
+                    .ThenInclude(p => p.ProductDescription)
+            .FirstOrDefaultAsync(b => b.UserId == userId, ct);
+    }
+
 }

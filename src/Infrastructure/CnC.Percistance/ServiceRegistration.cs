@@ -1,9 +1,12 @@
 ﻿using CnC.Application.Abstracts.Repositories.IBasketRepositories;
 using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
 using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
+using CnC.Application.Abstracts.Repositories.IDownloadRepositories;
 using CnC.Application.Abstracts.Repositories.IFavouriteRepositories;
 using CnC.Application.Abstracts.Repositories.IOrderProductRepositories;
 using CnC.Application.Abstracts.Repositories.IOrderRepositories;
+using CnC.Application.Abstracts.Repositories.IPaymentMethodRepositories;
+using CnC.Application.Abstracts.Repositories.IPaymentRepositories;
 using CnC.Application.Abstracts.Repositories.IProductBasketRepositories;
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
@@ -26,7 +29,6 @@ public static class ServiceRegistration
 
 
         #region Repository
-        
             services.AddScoped<ICategoryReadRepository, CategoryRepository>();
             services.AddScoped<ICategoryWriteRepository, CategoryRepository>();
             services.AddScoped<IProductReadRepository, ProductRepository>();
@@ -46,10 +48,17 @@ public static class ServiceRegistration
             services.AddScoped<IBasketWriteRepository, BasketRepository>();
             services.AddScoped<IProductBasketReadRepository, ProductBasketRepository>();
             services.AddScoped<IProductBasketWriteRepository, ProductBasketRepository>();
-            services.AddScoped<IOrderReadRepository,OrderRepository>();
-            services.AddScoped<IOrderWriteRepository, OrderRepository>();   
-            services.AddScoped<IOrderProductReadRepository,OrderProductRepository>();
+            services.AddScoped<IOrderReadRepository, OrderRepository>();
+            services.AddScoped<IOrderWriteRepository, OrderRepository>();
+            services.AddScoped<IOrderProductReadRepository, OrderProductRepository>();
             services.AddScoped<IOrderProductWriteRepository, OrderProductRepository>();
+            services.AddScoped<IPaymentReadRepository, PaymentRepository>();
+            services.AddScoped<IPaymentWriteRepository, PaymentRepository>();
+            services.AddScoped<IPaymentMethodReadRepository, PaymentMethodRepository>();
+            services.AddScoped<IPaymentMethodWriteRepository, PaymentMethodRepository>();
+            services.AddScoped<IDownloadReadRepository, DownloadRepository>();
+            services.AddScoped<IDownloadWriteRepository, DownloadRepository>();
+        
         #endregion
 
 
@@ -68,7 +77,7 @@ public static class ServiceRegistration
             services.AddTransient<CurrencyUpdateJob>();
             services.AddHttpContextAccessor();
 
-        //services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
+            //services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
 
         #endregion
     }

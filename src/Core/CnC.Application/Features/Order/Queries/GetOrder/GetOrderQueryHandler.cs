@@ -1,4 +1,5 @@
-﻿using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
+﻿using CnC.Application.Abstracts.Repositories.IBasketRepositories;
+using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
 using CnC.Application.Abstracts.Repositories.IOrderRepositories;
 using CnC.Application.Features.Order.Queries.GetOrder;
 using CnC.Application.Shared.Responses;
@@ -31,8 +32,11 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
             return new("User not found", HttpStatusCode.Unauthorized);
 
         var order = await _orderReadRepository.GetUserActiveOrderAsync(userId, cancellationToken);
-        if (order == null)
+        if (order is null)
             return new("No active order found", HttpStatusCode.NotFound);
+
+        if (!order.OrderProducts.Any())
+            return new("Product not found in order", HttpStatusCode.NotFound);
 
         decimal rate = 1;
         if (request.Currency != Currency.AZN)
@@ -51,22 +55,20 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
             IsPaid = order.isPaid,
             Products = order.OrderProducts.Select(op =>
             {
-                decimal convertedUnitPrice = Math.Round(op.UnitPrice / rate, 1);
-                decimal convertedTotalPrice = convertedUnitPrice * op.Quantity;
+                decimal convertedUnitPrice = Math.Round(op.Product.PriceAzn / rate, 1);
+                decimal convertedTotalPrice = convertedUnitPrice ;
 
                 return new OrderProductResponse
                 {
                     ProductId = op.ProductId,
-                    ProductName = op.Product.Name,
-                    Quantity = op.Quantity,
+                    ProductName = op.Product?.Name ?? "Unknown Product",
+                    Model = op.Product?.ProductDescription?.Model ?? string.Empty,
                     UnitPrice = convertedUnitPrice,
-                    TotalPrice = convertedTotalPrice,
-                    PreviewImageUrl = op.Product.PreviewImageUrl
+                    PreviewImageUrl = op.Product?.PreviewImageUrl ?? string.Empty
                 };
             }).ToList()
         };
-
-        response.TotalOrderPrice = response.Products.Sum(p => p.TotalPrice);
+        response.TotalOrderPrice = response.Products.Sum(p => p.UnitPrice);
 
         return new("Success", response, true, HttpStatusCode.OK);
     }

@@ -2,6 +2,7 @@
 using CnC.Application.Features.Order.Commands.Create;
 using CnC.Application.Features.Order.Commands.RemoveForOrder;
 using CnC.Application.Features.Order.Queries.GetOrder;
+using CnC.Application.Features.Order.Queries.GetPaidOrder;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,6 +44,13 @@ namespace CnC.WepApi.Controllers.Order
         {
             var response= await _mediator.Send(new GetOrderQueryRequest { Currency=request.Currency});
             return StatusCode((int)response.StatusCode,response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPaidOrder()
+        {
+            var response = await _mediator.Send(new GetPaidOrderQueryRequest());
+            return StatusCode((int)response.StatusCode, response);
         }
     }
 }

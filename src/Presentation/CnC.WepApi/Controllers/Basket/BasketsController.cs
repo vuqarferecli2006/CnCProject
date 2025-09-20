@@ -1,6 +1,5 @@
 ﻿using CnC.Application.Features.Basket.Commands.Create;
 using CnC.Application.Features.Basket.Commands.Delete;
-using CnC.Application.Features.Basket.Commands.Update;
 using CnC.Application.Features.Basket.Queries.GetBasket;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -24,14 +23,7 @@ namespace CnC.WepApi.Controllers.Basket
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
         }
-
-        [HttpPut]
-        public async Task<IActionResult> UpdateQuantityProduct([FromBody] UpdateBasketCommandRequest request)
-        {
-            var response = await _mediator.Send(request);
-            return StatusCode((int)response.StatusCode, response);
-        }
-
+         
         [HttpDelete]
         public async Task<IActionResult> DeleteProductInBasket([FromBody] DeleteProductInBasketCommandRequest request)
         {

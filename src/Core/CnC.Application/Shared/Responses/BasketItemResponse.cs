@@ -8,7 +8,5 @@ public class BasketItemResponse
     public string ProductName { get; set; } = null!;
     public string Model { get; set; } = null!;
     public string PreviewImageUrl { get; set; } = null!;
-    public int Quantity { get; set; }
     public decimal Price { get; set; }
-    public decimal TotalPrice { get; set; }
 }

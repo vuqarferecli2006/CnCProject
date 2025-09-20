@@ -54,7 +54,7 @@ public class GetBasketQueriesHandler : IRequestHandler<GetBasketQueriesRequest, 
 
         var basketResponse = new BasketResponse();
         decimal totalBasketPrice = 0;
-
+        basketResponse.BasketId = basket.Id;
         foreach (var pb in productBaskets)
         {
             var product = pb.Product;
@@ -62,7 +62,7 @@ public class GetBasketQueriesHandler : IRequestHandler<GetBasketQueriesRequest, 
                 continue;
 
             decimal convertedPrice = Math.Round(product.PriceAzn / rate, 1);
-            decimal totalPrice = convertedPrice * pb.Quantity;
+            decimal totalPrice = convertedPrice;
             totalBasketPrice += totalPrice;
 
             basketResponse.Items.Add(new BasketItemResponse
@@ -71,9 +71,7 @@ public class GetBasketQueriesHandler : IRequestHandler<GetBasketQueriesRequest, 
                 ProductName = product.Name,
                 Model = product.ProductDescription.Model,
                 PreviewImageUrl = product.PreviewImageUrl,
-                Quantity = pb.Quantity,
                 Price = convertedPrice,
-                TotalPrice = totalPrice
             });
         }
 

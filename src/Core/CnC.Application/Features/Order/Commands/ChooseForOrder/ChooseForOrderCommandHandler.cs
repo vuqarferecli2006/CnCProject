@@ -79,7 +79,6 @@ public class ChooseForOrderCommandHandler : IRequestHandler<ChooseForOrderComman
         {
             ProductId = productBasket.ProductId,
             OrderId = order.Id,
-            Quantity = productBasket.Quantity,
             UnitPrice = productBasket.Product.PriceAzn
         };
         await _orderProductWriteRepository.AddAsync(orderProduct);

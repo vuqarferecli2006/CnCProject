@@ -2,8 +2,6 @@
 
 public class ProductBasket:BaseEntity
 {
-    public int Quantity { get; set; }
-
     public decimal TotalPrice { get; set; }
 
     public string PreviewImageUrl { get; set; } = null!;

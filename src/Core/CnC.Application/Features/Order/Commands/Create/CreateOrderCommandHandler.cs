@@ -12,57 +12,62 @@ namespace CnC.Application.Features.Order.Commands.Create;
 
 public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommandRequest, BaseResponse<string>>
 {
-    private readonly IHttpContextAccessor _contextAccessor;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IBasketReadRepository _basketReadRepository;
     private readonly IProductBasketReadRepository _productBasketReadRepository;
     private readonly IOrderWriteRepository _orderWriteRepository;
+    private readonly IOrderReadRepository _orderReadRepository;
 
-    public CreateOrderCommandHandler(IHttpContextAccessor contextAccessor, 
-                                    IBasketReadRepository basketReadRepository, 
-                                    IProductBasketReadRepository productBasketReadRepository, 
-                                    IOrderWriteRepository orderWriteRepository)
+    public CreateOrderCommandHandler(
+        IHttpContextAccessor httpContextAccessor,
+        IBasketReadRepository basketReadRepository,
+        IProductBasketReadRepository productBasketReadRepository,
+        IOrderWriteRepository orderWriteRepository,
+        IOrderReadRepository orderReadRepository)
     {
-        _contextAccessor = contextAccessor;
+        _httpContextAccessor = httpContextAccessor;
         _basketReadRepository = basketReadRepository;
         _productBasketReadRepository = productBasketReadRepository;
         _orderWriteRepository = orderWriteRepository;
+        _orderReadRepository = orderReadRepository;
     }
 
     public async Task<BaseResponse<string>> Handle(CreateOrderCommandRequest request, CancellationToken cancellationToken)
     {
-        var userId = _contextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return new("User not found", HttpStatusCode.Unauthorized);
 
-        var basket = await _basketReadRepository.GetByBasketUser(userId,cancellationToken);
-        if(basket is null)
-            return new("Basket not found",HttpStatusCode.NotFound);
+        var existingOrder = await _orderReadRepository.GetUserActiveOrderAsync(userId, cancellationToken);
+        if (existingOrder is not null)
+            return new("You already have an active order", HttpStatusCode.BadRequest);
 
-        var productBasket=await _productBasketReadRepository.GetByBasketIdAsync(basket.Id,cancellationToken);
-        if (productBasket is null)
-            return new("Basket is empty", HttpStatusCode.OK);
+        var basket = await _basketReadRepository.GetByIdAsync(request.BasketId);
+        if (basket is null || basket.UserId != userId)
+            return new("Basket not found or not belongs to user", HttpStatusCode.NotFound);
 
-        var selectedProducts= productBasket.Where(pb => pb.IsSelectedForOrder).ToList();
+        var basketProducts = await _productBasketReadRepository.GetByBasketIdAsync(basket.Id, cancellationToken);
+        if (basketProducts is null || !basketProducts.Any())
+            return new("Basket is empty", HttpStatusCode.BadRequest);
 
-        if (!selectedProducts.Any())
-            return new("No products selected for order", HttpStatusCode.BadRequest);
-        
         var order = new Domain.Entities.Order
         {
+            Id = Guid.NewGuid(),
             UserId = userId,
             OrderDate = DateTime.UtcNow,
-            TotalAmount = selectedProducts.Sum(pb => pb.Product.PriceAzn * pb.Quantity),
-            OrderProducts = selectedProducts.Select(pb => new OrderProduct
+            isPaid = false,
+            TotalAmount = basketProducts.Sum(pb => pb.Product.PriceAzn),
+            OrderProducts = basketProducts.Select(pb => new OrderProduct
             {
+                Id = Guid.NewGuid(),
                 ProductId = pb.ProductId,
-                Quantity = pb.Quantity,
-                UnitPrice=pb.Product.PriceAzn,
-            }).ToList(),
+                UnitPrice = pb.Product.PriceAzn
+            }).ToList()
         };
 
         await _orderWriteRepository.AddAsync(order);
         await _orderWriteRepository.SaveChangeAsync();
 
-        return new("Created order Successfully", true, HttpStatusCode.Created);
+        return new("Order created successfully", true, HttpStatusCode.Created);
     }
 }

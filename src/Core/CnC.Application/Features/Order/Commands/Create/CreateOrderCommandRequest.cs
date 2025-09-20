@@ -5,4 +5,5 @@ namespace CnC.Application.Features.Order.Commands.Create;
 
 public class CreateOrderCommandRequest:IRequest<BaseResponse<string>>
 {
+    public Guid BasketId {  get; set; }
 }

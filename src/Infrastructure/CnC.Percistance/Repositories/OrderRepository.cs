@@ -20,19 +20,57 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
         var orderProduct = await _context.Orders
             .Where(o => o.UserId == userId && !o.isPaid)
             .SelectMany(o => o.OrderProducts)
+            .AsNoTracking()
             .FirstOrDefaultAsync(op => op.ProductId == productId, ct);
 
         return orderProduct;
     }
 
+
     public async Task<Order?> GetUserActiveOrderAsync(string userId, CancellationToken ct)
     {
         return await _context.Orders
-            .Where(o => o.UserId == userId && !o.isPaid)
             .Include(o => o.OrderProducts)
                 .ThenInclude(op => op.Product)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ct);
+                    .ThenInclude(p => p.ProductDescription) 
+            .FirstOrDefaultAsync(o => o.UserId == userId && !o.isPaid, ct);
+    }
 
+
+    public async Task<Order?> GetOrderWithProductsAsync(Guid orderId, CancellationToken ct)
+    {
+        return await _context.Orders
+            .Include(o => o.OrderProducts.Where(op => !op.IsDeleted))
+                .ThenInclude(op => op.Product)
+                    .ThenInclude(p => p.ProductDescription)
+                        .ThenInclude(pd => pd.ProductFiles)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+    }
+
+
+
+    public async Task<List<Order>> GetPaidOrdersByUserIdAsync(string userId, CancellationToken ct)
+    {
+        return await _context.Orders
+            .Where(o => o.UserId == userId && o.isPaid)
+            .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                    .ThenInclude(p => p.ProductDescription)
+            .Include(o => o.Payment)
+                 .ThenInclude(p=>p.PaymentMethod)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<Order>> GetPaidOrdersWithProductsAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .Where(o => o.UserId == userId && o.isPaid)
+            .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                    .ThenInclude(p => p.ProductDescription)
+                        .ThenInclude(pd => pd.ProductFiles)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 }
