@@ -46,7 +46,7 @@ namespace CnC.WepApi.Controllers.Category
         [HttpGet]
         public async Task<IActionResult> GetCategoryById([FromQuery] CategoryGetIdQueryRequest request)
         {
-            var response = await _mediator.Send(new CategoryGetIdQueryRequest { Id=request.Id});
+            var response = await _mediator.Send(new CategoryGetIdQueryRequest { Slug=request.Slug});
             return StatusCode((int)response.StatusCode, response);
         }
 

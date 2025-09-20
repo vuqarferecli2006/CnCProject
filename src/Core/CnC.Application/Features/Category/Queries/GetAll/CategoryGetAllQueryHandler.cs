@@ -17,12 +17,7 @@ public class CategoryGetAllQueryHandler : IRequestHandler<CategoryGetAllQueryReq
 
     public async Task<BaseResponse<List<CategoryResponse>>> Handle(CategoryGetAllQueryRequest request, CancellationToken cancellationToken)
     {
-        var categories = await _categoryReadRepository
-            .GetAll()
-            .Where(c => c.ParentCategoryId == Guid.Empty || c.ParentCategoryId == null && !c.IsDeleted)
-            .Include(c => c.SubCategories.Where(sc => !sc.IsDeleted))
-                .ThenInclude(sc => sc.SubCategories.Where(ssc => !ssc.IsDeleted))
-            .ToListAsync(cancellationToken);
+        var categories = await _categoryReadRepository.GetParentCategoriesWithSubcategoriesAsync(cancellationToken);
 
         if (!categories.Any())
             return new("No categories found",HttpStatusCode.NotFound);
@@ -39,6 +34,7 @@ public class CategoryGetAllQueryHandler : IRequestHandler<CategoryGetAllQueryReq
         {
             Id = category.Id,
             Name = category.Name,
+            Slug= category.Slug,
             Description = category.Description,
             SubCategories = category.SubCategories
             .Where(sc => !sc.IsDeleted)
@@ -47,6 +43,7 @@ public class CategoryGetAllQueryHandler : IRequestHandler<CategoryGetAllQueryReq
                 Id = sc.Id,
                 Name = sc.Name,
                 Description = sc.Description,
+                Slug= sc.Slug,
                 SubCategories = sc.SubCategories
                     .Where(ssc => !ssc.IsDeleted)
                     .Select(ssc => new CategorySubResponse

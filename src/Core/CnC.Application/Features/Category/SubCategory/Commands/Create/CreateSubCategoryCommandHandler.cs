@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -24,8 +25,9 @@ public class CreateSubCategoryCommandHandler : IRequestHandler<CreateSubCategory
             return new("Parent category not found",HttpStatusCode.NotFound);
 
         var exists=await _categoryReadRepository
-            .GetByFiltered(c => c.ParentCategoryId == request.ParentCategoryId &&
-                                c.Name.Trim().ToLower() == request.Name.Trim().ToLower()).AnyAsync(cancellationToken);
+            .GetByFiltered(c => c.ParentCategoryId == request.ParentCategoryId 
+                                &&!c.IsDeleted
+                                &&c.Name.Trim().ToLower() == request.Name.Trim().ToLower()).AnyAsync(cancellationToken);
 
         if (exists)
             return new("This sub category already exists under the specified parent category",HttpStatusCode.BadRequest);
@@ -33,6 +35,7 @@ public class CreateSubCategoryCommandHandler : IRequestHandler<CreateSubCategory
         var category = new Domain.Entities.Category
         {
             Name = request.Name,
+            Slug = SlugHelper.GenerateSlug(request.Name),
             Description = request.Description,
             ParentCategoryId = request.ParentCategoryId
         };

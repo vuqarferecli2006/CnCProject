@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,7 @@ public class UpdateMainCategoryCommandHandler : IRequestHandler<UpdateMainCatego
 
         var nameExists = await _categoryReadRepository.GetByFiltered(c =>
         c.Id != request.Id &&
+        !c.IsDeleted&&
         c.Name.ToLower().Trim() == request.Name.ToLower().Trim() &&
         c.ParentCategory == null).AnyAsync(cancellationToken);
 
@@ -37,6 +39,7 @@ public class UpdateMainCategoryCommandHandler : IRequestHandler<UpdateMainCatego
             return new("Another main category with this name already exists", HttpStatusCode.BadRequest);
 
         category.Name = request.Name.Trim();
+        category.Slug = SlugHelper.GenerateSlug(request.Name);
         category.Description = request.Description?.Trim();
 
 

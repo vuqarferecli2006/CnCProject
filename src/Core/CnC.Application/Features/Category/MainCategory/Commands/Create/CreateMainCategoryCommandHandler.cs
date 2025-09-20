@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,9 @@ public class CreateMainCategoryCommandHandler : IRequestHandler<CreateMainCatego
     public async Task<BaseResponse<string>> Handle(CreateMainCategoryCommandRequest request, CancellationToken cancellationToken)
     {
         var existsCategory = await _categoryReadRepository
-            .GetByFiltered(c => c.ParentCategoryId == null &&
-                                c.Name.Trim().ToLower() == request.Name.Trim().ToLower())
+            .GetByFiltered(c => c.ParentCategoryId == null 
+                                &&!c.IsDeleted
+                                &&c.Name.Trim().ToLower() == request.Name.Trim().ToLower())
             .AnyAsync(cancellationToken);
 
         if (existsCategory)
@@ -30,6 +32,7 @@ public class CreateMainCategoryCommandHandler : IRequestHandler<CreateMainCatego
         var category = new Domain.Entities.Category
         {
             Name = request.Name.Trim(),
+            Slug=SlugHelper.GenerateSlug(request.Name),
             Description = request.Description.Trim(),
             ParentCategoryId = null
         };

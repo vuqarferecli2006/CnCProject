@@ -20,11 +20,11 @@ public class ProductDescriptionRepository : Repository<ProductDescription>, IPro
             .FirstOrDefaultAsync(pd => pd.Id == id, cancellationToken);
     }
 
-    public async Task<ProductDescription?> GetProductDescriptionByIdAsync(Guid productId, CancellationToken cancellationToken)
+    public async Task<ProductDescription?> GetProductDescriptionBySlugAsync(string slug, CancellationToken cancellationToken)
     {
         return await _context.ProductDescriptions
             .Include(pd => pd.Product)
-            .ThenInclude(p => p.ProductCurrencies)
-            .FirstOrDefaultAsync(pd => pd.ProductId == productId, cancellationToken);
+            .FirstOrDefaultAsync(pd => pd.Product.Slug == slug, cancellationToken);
+
     }
 }

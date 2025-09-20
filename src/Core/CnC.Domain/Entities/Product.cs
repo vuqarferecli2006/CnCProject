@@ -10,6 +10,8 @@ public class Product:BaseEntity
 
     public int Score { get; set; }
 
+    public string? Slug { get; set; }
+
     public decimal PriceAzn { get; set; }
 
     public Guid CategoryId { get; set; }

@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ public class UpdateSubCategoryCommandHandler : IRequestHandler<UpdateSubCategory
 
         var nameExists = await _categoryReadRepository.GetByFiltered(c =>
         c.Id != request.Id &&
+        !c.IsDeleted&&
         c.Name.ToLower().Trim() == request.Name.ToLower().Trim() &&
         c.ParentCategoryId == request.NewParentCategoryId).
         AnyAsync(cancellationToken);
@@ -48,6 +50,7 @@ public class UpdateSubCategoryCommandHandler : IRequestHandler<UpdateSubCategory
             return new("Another subcategory with this name already exists under the selected parent", HttpStatusCode.BadRequest);
 
         category.Name = request.Name.Trim();
+        category.Slug=SlugHelper.GenerateSlug(request.Name);
         category.Description = request.Description?.Trim();
         category.ParentCategoryId = request.NewParentCategoryId;
 

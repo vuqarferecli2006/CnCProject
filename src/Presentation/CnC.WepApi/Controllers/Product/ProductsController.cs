@@ -61,9 +61,9 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProductDescriptionById([FromQuery] GetByIdDescriptionQueryRequest request)
+        public async Task<IActionResult> GetBySlugProductDescription([FromQuery] GetBySlugDescriptionQueryRequest request)
         {
-            var response = await _mediator.Send(new GetByIdDescriptionQueryRequest { ProductId = request.ProductId, Currency = request.Currency });
+            var response = await _mediator.Send(new GetBySlugDescriptionQueryRequest { Slug = request.Slug, Currency = request.Currency });
             return StatusCode((int)response.StatusCode, response);
         }
 

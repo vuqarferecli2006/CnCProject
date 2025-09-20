@@ -17,12 +17,7 @@ public class CategoryGetIdQueryHandler : IRequestHandler<CategoryGetIdQueryReque
 
     public async Task<BaseResponse<CategoryResponse>> Handle(CategoryGetIdQueryRequest request, CancellationToken cancellationToken)
     {
-        var category = await _categoryReadRepository
-          .GetByFiltered(c => c.Id == request.Id)
-          .Include(c => c.SubCategories.Where(sc => !sc.IsDeleted))
-              .ThenInclude(sc => sc.SubCategories.Where(ssc => !ssc.IsDeleted))
-          .Where(c => !c.IsDeleted)
-          .FirstOrDefaultAsync(cancellationToken);
+        var category = await _categoryReadRepository.GetCategoryWithSubcategoriesBySlugAsync(request.Slug, cancellationToken);
 
         if (category is null)
             return new("Category not found", false, HttpStatusCode.NotFound);
@@ -39,6 +34,7 @@ public class CategoryGetIdQueryHandler : IRequestHandler<CategoryGetIdQueryReque
         {
             Id = category.Id,
             Name = category.Name,
+            Slug = category.Slug,
             Description = category.Description,
             SubCategories = category.SubCategories
             .Where(sc => !sc.IsDeleted)

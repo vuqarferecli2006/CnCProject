@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 
-public interface IProductDescriptionReadRepository:IReadRepository<ProductDescription>
+public interface IProductDescriptionReadRepository : IReadRepository<ProductDescription>
 {
     Task<ProductDescription?> GetByIdWithFilesAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<ProductDescription?> GetProductDescriptionByIdAsync(Guid productId, CancellationToken cancellationToken);
+    Task<ProductDescription?> GetProductDescriptionBySlugAsync(string slug, CancellationToken cancellationToken);
 }
