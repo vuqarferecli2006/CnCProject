@@ -3,6 +3,7 @@ using CnC.Application.Abstracts.Repositories.IOrderRepositories;
 using CnC.Application.Abstracts.Repositories.IPaymentRepositories;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Services;
+using CnC.Application.Shared.Helpers.SendOrderEmailHelpers;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using MediatR;
@@ -21,6 +22,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
     private readonly IProductWriteRepository _productWriteRepository;
     private readonly IDownloadWriteRepository _downloadWriteRepository;
     private readonly IElasticProductService _elasticProductService;
+    private readonly IEmailService _emailService;
 
     public CreatePaymentCommandHandler(
         IOrderReadRepository orderReadRepository,
@@ -28,7 +30,8 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         IPaymentWriteRepository paymentWriteRepository,
         IProductWriteRepository productWriteRepository,
         IDownloadWriteRepository downloadWriteRepository,
-        IElasticProductService elasticProductService)
+        IElasticProductService elasticProductService,
+        IEmailService emailService)
     {
         _orderReadRepository = orderReadRepository;
         _orderWriteRepository = orderWriteRepository;
@@ -36,6 +39,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         _productWriteRepository = productWriteRepository;
         _downloadWriteRepository = downloadWriteRepository;
         _elasticProductService = elasticProductService;
+        _emailService = emailService;
     }
 
     public async Task<BaseResponse<string>> Handle(CreatePaymentCommandRequest request, CancellationToken cancellationToken)
@@ -98,6 +102,8 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         await _paymentWriteRepository.SaveChangeAsync();
         await _downloadWriteRepository.SaveChangeAsync();
 
+
+        await SendOrderEmailHelpers.SendOrderEmailsAsync(_emailService,order);
         return new("Order successfully paid", true, HttpStatusCode.OK);
     }
 }
