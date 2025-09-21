@@ -4,9 +4,9 @@ using MediatR;
 
 namespace CnC.Application.Features.ProductDescription.Queries.GetByIdDescription;
 
-public class GetByIdDescriptionQueryRequest:IRequest<BaseResponse<ProductDescriptionResponse>>
+public class GetBySlugDescriptionQueryRequest:IRequest<BaseResponse<ProductDescriptionResponse>>
 {
-    public Guid ProductId { get; set; }
+    public string Slug { get; set; } = null!;
 
     public Currency Currency { get; set; } = Currency.AZN;
 }

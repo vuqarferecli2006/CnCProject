@@ -1,6 +1,7 @@
 ﻿using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Services;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using CnC.Domain.Enums;
@@ -66,6 +67,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommandR
         var product = new Domain.Entities.Product
         {
             Name = request.Name,
+            Slug=SlugHelper.GenerateSlug(request.Name),
             CategoryId = request.CategoryId,
             PreviewImageUrl = previewUrl,
             DiscountedPercent = request.DiscountedPercent,

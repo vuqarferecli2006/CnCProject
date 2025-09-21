@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace CnC.Application.Features.ProductDescription.Queries.GetByIdDescription;
 
-public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescriptionQueryRequest, BaseResponse<ProductDescriptionResponse>>
+public class GetBySlugDescriptionQueryHandler : IRequestHandler<GetBySlugDescriptionQueryRequest, BaseResponse<ProductDescriptionResponse>>
 {
     private readonly IProductDescriptionReadRepository _productDescriptionReadRepository;
     private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
@@ -24,7 +24,7 @@ public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescript
     private readonly IProductViewWriteRepository _productViewWriteRepository;
 
 
-    public GetProductDescriptionQueryHandler(IProductDescriptionReadRepository productDescriptionReadRepository,
+    public GetBySlugDescriptionQueryHandler(IProductDescriptionReadRepository productDescriptionReadRepository,
                                         ICurrencyRateReadRepository currencyRateReadRepository,
                                         IProductWriteRepository productWriteRepository,
                                         IElasticProductService elasticProductService,
@@ -41,69 +41,42 @@ public class GetProductDescriptionQueryHandler : IRequestHandler<GetByIdDescript
         _productViewReadRepository = productViewReadRepository;
     }
 
-    public async Task<BaseResponse<ProductDescriptionResponse>> Handle(GetByIdDescriptionQueryRequest request, CancellationToken cancellationToken)
+    public async Task<BaseResponse<ProductDescriptionResponse>> Handle(GetBySlugDescriptionQueryRequest request, CancellationToken cancellationToken)
     {
-        var productDescription = await _productDescriptionReadRepository.GetProductDescriptionByIdAsync(request.ProductId, cancellationToken);
+
+        var productDescription = await _productDescriptionReadRepository
+            .GetProductDescriptionBySlugAsync(request.Slug, cancellationToken);
 
         if (productDescription is null)
             return new("Product not found", HttpStatusCode.NotFound);
-        
-        decimal convertedPrice;
 
+        decimal convertedPrice;
         if (request.Currency == Currency.AZN)
             convertedPrice = productDescription.Product.PriceAzn;
         else
         {
-            var currencyRate = await _currencyRateReadRepository.GetCurrencyRateByCodeAsync(request.Currency.ToString(), cancellationToken);
+            var currencyRate = await _currencyRateReadRepository
+                .GetCurrencyRateByCodeAsync(request.Currency.ToString(), cancellationToken);
 
             if (currencyRate == null)
                 return new("Currency rate not found", HttpStatusCode.NotFound);
-            
+
             convertedPrice = productDescription.Product.PriceAzn / currencyRate.RateAgainstAzn;
         }
 
         convertedPrice = Math.Round(convertedPrice, 1);
 
         productDescription.ViewCount++;
-
         await _productWriteRepository.SaveChangeAsync();
+        await _elasticProductService.UpdateProductViewCountAsync(
+            productDescription.ProductId, productDescription.ViewCount);
 
-        await _elasticProductService.UpdateProductViewCountAsync(productDescription.ProductId, productDescription.ViewCount);
-
-        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        string? sessionId = null;
-
-        if (string.IsNullOrEmpty(userId))
-            sessionId = _httpContextAccessor.HttpContext?.Session?.Id;
-
-        var existingViews = await _productViewReadRepository.GetUserViewsAsync(userId, sessionId, cancellationToken);
-
-        var alreadyViewed = existingViews.Any(v => v.ProductId == productDescription.ProductId);
-
-        if (!alreadyViewed)
-        {
-            if (existingViews.Count >= 12)
-            {
-                var oldestView = existingViews.First();
-                _productViewWriteRepository.Delete(oldestView);
-            }
-            
-            var newView = new Domain.Entities.ProductView
-            {
-                ProductId = productDescription.ProductId,
-                UserId = userId,
-                SessionId = sessionId,
-                ViewedAt = DateTime.UtcNow
-            };
-
-            await _productViewWriteRepository.AddAsync(newView);
-            await _productViewWriteRepository.SaveChangeAsync();
-        }
 
         var response = new ProductDescriptionResponse
         {
             ProductId = productDescription.ProductId,
             ProductName = productDescription.Product.Name,
+            Slug = productDescription.Product.Slug,
             Description = productDescription.Description,
             Model = productDescription.Model,
             ImageUrl = productDescription.ImageUrl,

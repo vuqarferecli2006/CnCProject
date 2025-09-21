@@ -2,6 +2,7 @@
 using CnC.Domain.Entities;
 using CnC.Percistance.Contexts;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace CnC.Percistance.Repositories;
 

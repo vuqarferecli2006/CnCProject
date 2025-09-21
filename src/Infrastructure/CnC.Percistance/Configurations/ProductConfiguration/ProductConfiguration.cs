@@ -14,6 +14,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.Property(p => p.Slug)
+            .HasMaxLength(200);
+
+        builder.HasIndex(p => p.Slug)
+            .IsUnique();
+
         builder.Property(p => p.PreviewImageUrl)
             .IsRequired()
             .HasMaxLength(250);

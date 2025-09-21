@@ -40,13 +40,17 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
     public async Task<Order?> GetOrderWithProductsAsync(Guid orderId, CancellationToken ct)
     {
         return await _context.Orders
-            .Include(o => o.OrderProducts.Where(op => !op.IsDeleted))
+            .Include(o => o.User) // Alıcı
+            .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+                    .ThenInclude(p => p.User) // Satıcı
+            .Include(o => o.OrderProducts)
                 .ThenInclude(op => op.Product)
                     .ThenInclude(p => p.ProductDescription)
-                        .ThenInclude(pd => pd.ProductFiles)
-            .AsNoTracking()
+                        .ThenInclude(pd => pd.ProductFiles) 
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
     }
+
 
 
 

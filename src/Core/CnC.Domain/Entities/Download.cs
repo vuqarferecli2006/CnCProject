@@ -4,6 +4,8 @@ public class Download:BaseEntity
 {
     public string FileUrl { get; set; } = null!;
 
+    public string? Slug { get; set; }
+
     public DateTime DownloadedAt { get; set; }
 
     public Guid OrderProductId { get; set; }    

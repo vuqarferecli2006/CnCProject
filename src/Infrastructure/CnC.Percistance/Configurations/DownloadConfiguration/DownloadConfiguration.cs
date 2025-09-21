@@ -14,6 +14,11 @@ public class DownloadConfiguration : IEntityTypeConfiguration<Download>
             .IsRequired()
             .HasMaxLength(1000);
 
+        builder.Property(d => d.Slug)
+            .HasMaxLength(100);
+
+        builder.HasIndex(d => d.Slug)
+            .IsUnique();
         builder.HasOne(op=> op.OrderProduct)
                .WithMany(d => d.Downloads)
                .HasForeignKey(d => d.OrderProductId);

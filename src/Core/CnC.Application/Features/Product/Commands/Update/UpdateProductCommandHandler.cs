@@ -2,6 +2,7 @@
 using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Services;
+using CnC.Application.Shared.Helpers.SlugHelpers;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using MediatR;
@@ -49,6 +50,7 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommandR
             return new("Category not found", HttpStatusCode.NotFound);
 
         productExists.Name = request.Name;
+        productExists.Slug = SlugHelper.GenerateSlug(request.Name);
         productExists.DiscountedPercent = request.DiscountedPercent;
         productExists.CategoryId = request.NewCategoryId;
 
