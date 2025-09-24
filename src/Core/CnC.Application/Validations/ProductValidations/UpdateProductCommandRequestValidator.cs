@@ -1,0 +1,50 @@
+﻿using CnC.Application.Features.Product.Commands.Update;
+using FluentValidation;
+
+namespace CnC.Application.Validations.ProductValidations;
+
+public class UpdateProductCommandRequestValidator : AbstractValidator<UpdateProductCommandRequest>
+{
+
+    private readonly string[] _allowedExtensions = { ".jpeg", ".jpg", ".png", ".webp" };
+    private const long MaxFileSize = 5 * 1024 * 1024;
+    public UpdateProductCommandRequestValidator()
+    {
+        RuleFor(Pr => Pr.ProductId)
+            .NotEmpty()
+            .WithMessage("ProductId cannot be null");
+
+        RuleFor(Pr => Pr.NewCategoryId)
+            .NotEmpty()
+            .WithMessage("NewCategoryId cannot be null");
+
+        RuleFor(Pr => Pr.Name)
+            .NotEmpty()
+            .WithMessage("Product name cannot be null")
+            .MaximumLength(500)
+            .WithMessage("Product name can be at most 500 characters long");
+
+
+        RuleFor(Pr => Pr.DiscountedPercent)
+                .InclusiveBetween(0, 100)
+                .WithMessage("DiscountedPercent must be between 0 and 100");
+
+        RuleFor(Pr => Pr.PriceAzn)
+            .NotEmpty()
+            .WithMessage("Product's price must be required")
+            .GreaterThan(0)
+            .WithMessage("PriceAzn must be greater than 0");
+
+
+        RuleFor(Pr => Pr.PreviewImageUrl)
+
+                 .Must(file => file.Length <= MaxFileSize)
+                     .WithMessage("Preview image size must not exceed 5 MB")
+                 .Must(file =>
+                 {
+                     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                     return _allowedExtensions.Contains(ext);
+                 })
+                     .WithMessage("Only .jpeg, .jpg, .png, or .webp files are allowed");
+    }
+}

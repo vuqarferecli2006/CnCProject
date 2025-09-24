@@ -18,6 +18,9 @@ using System.Text;
 using Hangfire;
 using MediatR;
 using Nest;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using CnC.Application.Validations.BasketValidations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +31,12 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+
+
+builder.Services.AddValidatorsFromAssembly(typeof(AddBasketCommandRequestValidator).Assembly);
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters(); ;
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
