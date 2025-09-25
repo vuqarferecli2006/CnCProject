@@ -18,9 +18,11 @@ public class CreateSubCategoryCommandRequestValidator : AbstractValidator<Create
             .WithMessage("Name can be at most 300 characters long");
 
         RuleFor(Sctg => Sctg.Description)
-            .NotEmpty()
-            .WithMessage("Subcategory's description cannot be null")
-            .MaximumLength(1000)
-            .WithMessage("Description can be at most 1000 characters long");
+            .NotEmpty().WithMessage("Description is required.")
+            .Must(d => !string.IsNullOrWhiteSpace(d))
+                .WithMessage("Description cannot contain only whitespace.")
+            .MinimumLength(20).WithMessage("Description must be at least 20 characters long.")
+            .Matches(@"^[A-Za-z0-9\s.,!?'-]*$")
+                .WithMessage("Description can only contain letters, numbers, spaces, and basic punctuation.");
     }
 }

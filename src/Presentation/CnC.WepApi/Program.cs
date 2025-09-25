@@ -1,26 +1,27 @@
-﻿using CnC.Application.Shared.Helpers.PermissionHelpers;
+﻿using CnC.Application.Abstracts.Services;
+using CnC.Application.Behaviors;
 using CnC.Application.Features.User.Commands.Register;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using CnC.Application.Abstracts.Services;
+using CnC.Application.Shared.Helpers.PermissionHelpers;
 using CnC.Application.Shared.Settings;
-using Microsoft.IdentityModel.Tokens;
-using System.Text.Json.Serialization;
+using CnC.Application.Validations.BasketValidations;
+using CnC.Domain.Entities;
+using CnC.Infrastructure.Services;
+using CnC.Percistance;
+using CnC.Percistance.Contexts;
+using CnC.WepApi.MiddleWare;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Hangfire;
+using Hangfire.PostgreSql;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using CnC.Infrastructure.Services;
-using CnC.Percistance.Contexts;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using CnC.WepApi.MiddleWare;
-using Hangfire.PostgreSql;
-using CnC.Domain.Entities;
-using CnC.Percistance;
-using System.Text;
-using Hangfire;
-using MediatR;
 using Nest;
-using FluentValidation.AspNetCore;
-using FluentValidation;
-using CnC.Application.Validations.BasketValidations;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +107,7 @@ options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddMediatR(typeof(RegisterUserCommandRequest).Assembly);
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.Configure<JwtSetting>(
     builder.Configuration.GetSection("Jwt"));

@@ -32,19 +32,6 @@ public class CreateProductCommandRequestValidator : AbstractValidator<CreateProd
                 .NotEmpty()
                 .WithMessage("CategoryId cannot be null");
 
-        RuleFor(Pr => Pr.PreviewImageUrl)
-                 .NotNull()
-                 .WithMessage("Preview image is required")
-                 .Must(file => file.Length > 0)
-                     .WithMessage("Preview image cannot be empty")
-                 .Must(file => file.Length <= MaxFileSize)
-                     .WithMessage("Preview image size must not exceed 5 MB")
-                 .Must(file =>
-                 {
-                     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                     return  _allowedExtensions.Contains(ext);
-                 })
-                     .WithMessage("Only .jpeg, .jpg, .png, or .webp files are allowed");
-
+        
     }
 }

@@ -15,22 +15,20 @@ public class ChangePasswordCommandRequestValidator : AbstractValidator<ChangePas
 
         RuleFor(cp => cp.NewPassword)
             .NotEmpty()
-            .WithMessage("New password is required")
+                .WithMessage("New password is required")
             .MinimumLength(6)
-            .WithMessage("New password must be at least 6 characters")
-            .NotEqual(cp => cp.CurrentPassword)
-            .WithMessage("New password cannot be the same as current password")
+                .WithMessage("New password must be at least 6 characters")
             .Matches("[A-Z]")
-            .WithMessage("Password must contain at least one uppercase letter")
+                .WithMessage("Password must contain at least one uppercase letter")
             .Matches("[a-z]")
-            .WithMessage("Password must contain at least one lowercase letter")
+                .WithMessage("Password must contain at least one lowercase letter")
             .Matches("[^a-zA-Z0-9]")
-            .WithMessage("Password must contain at least one special character");
+            .   WithMessage("Password must contain at least one special character");
 
         RuleFor(cp => cp.ConfirmNewPassword)
                .NotEmpty()
-               .WithMessage("Confirm password is required")
+                .WithMessage("Confirm password is required")
                .Equal(cp => cp.NewPassword)
-               .WithMessage("Confirm password must match the new password");
+                .WithMessage("Confirm password must match the new password");
     }
 }

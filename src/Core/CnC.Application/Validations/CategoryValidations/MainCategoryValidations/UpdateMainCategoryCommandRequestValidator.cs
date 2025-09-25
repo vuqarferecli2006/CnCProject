@@ -21,8 +21,11 @@ public class UpdateMainCategoryCommandRequestValidator : AbstractValidator<Updat
         When(Mctg => Mctg.Description is not null, () =>
         {
             RuleFor(Mctg => Mctg.Description!)
-                .MaximumLength(1000)
-                .WithMessage("Description can be at most 1000 characters long");
+             .NotEmpty().WithMessage("Description is required.")
+            .Must(d => !string.IsNullOrWhiteSpace(d))
+                .WithMessage("Description cannot contain only whitespace.")
+            .MinimumLength(20).WithMessage("Description must be at least 20 characters long.")
+            .Matches(@"^[A-Za-z0-9\s.,!?'-]*$");
         });
     }
 }

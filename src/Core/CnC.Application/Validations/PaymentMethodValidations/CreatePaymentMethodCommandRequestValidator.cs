@@ -8,19 +8,19 @@ public class CreatePaymentMethodCommandRequestValidator : AbstractValidator<Crea
     public CreatePaymentMethodCommandRequestValidator()
     {
         RuleFor(PayM => PayM.Name)
-            .MaximumLength(200)
-            .WithMessage(" Name can be at most 200 characters long");
+            .MaximumLength(50)
+                .WithMessage(" Name can be at most 50 characters long");
 
         RuleFor(PayM => PayM.Currency)
             .NotEmpty()
-            .WithMessage("Currency cannot be null")
+                .WithMessage("Currency cannot be null")
             .IsInEnum()
-            .WithMessage("Currency value is invalid.");
+                .WithMessage("Currency value is invalid.");
 
         RuleFor(PayM => PayM.MethodForPayment)
             .NotEmpty()
-            .WithMessage("Method for payment cannot be null")
+                .WithMessage("Method for payment cannot be null")
             .IsInEnum()
-            .WithMessage("MethodPayment value is invalid.");
+                .WithMessage("MethodPayment value is invalid.");
     }
 }
