@@ -1,7 +1,7 @@
 ﻿using CnC.Application.Shared.Responses;
 using MediatR;
 
-namespace CnC.Application.Features.InformationModel.Create;
+namespace CnC.Application.Features.InformationModel.Commands.Create;
 
 public class CreateInfromationModelRequest:IRequest<BaseResponse<string>>
 {

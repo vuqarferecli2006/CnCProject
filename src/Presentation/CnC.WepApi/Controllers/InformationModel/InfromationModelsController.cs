@@ -1,4 +1,6 @@
-﻿using CnC.Application.Features.InformationModel.Create;
+﻿using CnC.Application.Features.InformationModel.Commands.Create;
+using CnC.Application.Features.InformationModel.Commands.Update;
+using CnC.Application.Features.InformationModel.Queries.GetAll;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
@@ -20,6 +22,20 @@ namespace CnC.WepApi.Controllers.InformationModel
         {
             var response= await _mediator.Send(request);
             return StatusCode((int)response.StatusCode,response);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateInformationModel([FromBody]UpdateInformationModelRequest request)
+        {
+            var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllInformationModel()
+        {
+            var response=await _mediator.Send(new GetAllInformationModelsRequestQuery());
+            return StatusCode((int)response.StatusCode, response);
         }
     }
 }

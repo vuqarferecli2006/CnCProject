@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Security.Claims;
 
-namespace CnC.Application.Features.InformationModel.Create;
+namespace CnC.Application.Features.InformationModel.Commands.Create;
 
 public class CreateInfromationModelHandler : IRequestHandler<CreateInfromationModelRequest, BaseResponse<string>>
 {

@@ -24,7 +24,6 @@ namespace CnC.WepApi.Controllers.Role
             return StatusCode(((int)response.StatusCode), response);
         }
         [HttpPost]
-        [Authorize(Policy = Permission.Account.AssignRole)]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleCommandRequest request)
         {
             var response = await _mediator.Send(request);
