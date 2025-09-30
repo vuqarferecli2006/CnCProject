@@ -5,4 +5,5 @@ namespace CnC.Application.Abstracts.Repositories.IPaymentMethodRepositories;
 
 public interface IPaymentMethodReadRepository:IReadRepository<PaymentMethod>
 {
+    Task<PaymentMethod?> GetMethodWithUserAsync(Guid paymentMethodId);
 }

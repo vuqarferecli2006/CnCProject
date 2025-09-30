@@ -2,7 +2,7 @@
 
 namespace CnC.Infrastructure.Services.EmailRabbitMQ;
 
-public class EmailConsumerService /*: BackgroundService*/
+public class EmailConsumerService : BackgroundService
 {
     private readonly EmailConsumer _consumer;
 
@@ -11,10 +11,10 @@ public class EmailConsumerService /*: BackgroundService*/
         _consumer = consumer;
     }
 
-    //protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    //{
-    //    _consumer.Start();
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _consumer.Start();
 
-    //    return Task.CompletedTask;
-    //}
+        return Task.CompletedTask;
+    }
 }

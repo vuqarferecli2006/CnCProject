@@ -31,12 +31,12 @@ public class GetPaidOrderQueryHandler : IRequestHandler<GetPaidOrderQueryRequest
 
         var response = orders.Select(order =>
         {
-            var paymentMethod = order.Payment?.PaymentMethod;
+            var payment = order.Payment;
 
             return new GetPaidOrderResponse
             {
                 OrderId = order.Id,
-                Currency = paymentMethod?.Currency.ToString() ?? "AZN",
+                Currency = payment?.Currency.ToString() ?? "AZN",
                 isPaid = order.isPaid,
                 TotalOrderAmount = order.TotalAmount,
                 Product = order.OrderProducts.Select(op => new PaidOrderProductResponse

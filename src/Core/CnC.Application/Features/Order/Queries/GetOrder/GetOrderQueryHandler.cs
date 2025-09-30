@@ -56,7 +56,7 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
             Products = order.OrderProducts.Select(op =>
             {
                 decimal convertedUnitPrice = Math.Round(op.Product.PriceAzn / rate, 1);
-                decimal convertedTotalPrice = convertedUnitPrice ;
+                decimal convertedTotalPrice = convertedUnitPrice;
 
                 return new OrderProductResponse
                 {
@@ -66,10 +66,9 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
                     UnitPrice = convertedUnitPrice,
                     PreviewImageUrl = op.Product?.PreviewImageUrl ?? string.Empty
                 };
-            }).ToList()
+            }).ToList(),
+            TotalOrderPrice = Math.Round(order.TotalAmount / rate, 1),
         };
-        response.TotalOrderPrice = response.Products.Sum(p => p.UnitPrice);
-
         return new("Success", response, true, HttpStatusCode.OK);
     }
 }

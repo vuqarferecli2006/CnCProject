@@ -44,13 +44,12 @@ public class ChooseForOrderCommandHandler : IRequestHandler<ChooseForOrderComman
         if (string.IsNullOrEmpty(userId))
             return new("User not found", HttpStatusCode.Unauthorized);
 
-        // Basketi yoxla
         var basket = await _basketReadRepository.GetByBasketUser(userId, cancellationToken);
-        if (basket == null)
+        if (basket is null)
             return new("Basket not found", HttpStatusCode.NotFound);
 
         var productBasket = await _productBasketReadRepository.ExistProductInBasket(basket.Id, request.ProductId, cancellationToken);
-        if (productBasket == null)
+        if (productBasket is null)
             return new("Product not in basket", HttpStatusCode.NotFound);
 
         productBasket.IsSelectedForOrder = true;
@@ -75,6 +74,8 @@ public class ChooseForOrderCommandHandler : IRequestHandler<ChooseForOrderComman
         if (existingOrderProduct is not null)
             return new("Already added", HttpStatusCode.BadRequest);
 
+        var unitPrice = productBasket.Product.PriceAzn;
+
         var orderProduct = new OrderProduct
         {
             ProductId = productBasket.ProductId,
@@ -82,8 +83,11 @@ public class ChooseForOrderCommandHandler : IRequestHandler<ChooseForOrderComman
             UnitPrice = productBasket.Product.PriceAzn
         };
         await _orderProductWriteRepository.AddAsync(orderProduct);
-        await _orderProductWriteRepository.SaveChangeAsync();
+        order.TotalAmount += unitPrice;
+        _orderWriteRepository.Update(order);
 
+        await _orderProductWriteRepository.SaveChangeAsync();
+        await _orderWriteRepository.SaveChangeAsync();
 
         return new("Product selected for order", true, HttpStatusCode.OK);
     }

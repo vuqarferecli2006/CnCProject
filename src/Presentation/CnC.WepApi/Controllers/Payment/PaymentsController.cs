@@ -25,10 +25,11 @@ namespace CnC.WepApi.Controllers.Payment
         }
 
         [HttpPost]
-        public async Task<IActionResult> PaymentForTest([FromBody]CreatePaymentCommandRequest request)
+        public async Task<IActionResult> PaymentForTest([FromQuery]CreatePaymentCommandRequest request)
         {
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
         }
+        
     }
 }

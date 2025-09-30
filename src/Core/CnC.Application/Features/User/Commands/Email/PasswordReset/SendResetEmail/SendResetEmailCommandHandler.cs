@@ -1,4 +1,5 @@
 ﻿using CnC.Application.Abstracts.Services;
+using CnC.Application.DTOs.Email;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using MediatR;
@@ -13,9 +14,9 @@ namespace CnC.Application.Features.User.Commands.Email.PasswordReset.SendResetEm
 public class SendResetEmailCommandHandler : IRequestHandler<SendResetEmailCommandRequest, BaseResponse<string>>
 {
     private readonly UserManager<AppUser> _userManager;
-    private readonly IEmailService _emailService;
+    private readonly IEmailQueueService _emailService;
 
-    public SendResetEmailCommandHandler(UserManager<AppUser> userManager, IEmailService emailService)
+    public SendResetEmailCommandHandler(UserManager<AppUser> userManager, IEmailQueueService emailService)
     {
         _userManager = userManager;
         _emailService = emailService;
@@ -29,7 +30,14 @@ public class SendResetEmailCommandHandler : IRequestHandler<SendResetEmailComman
 
         var resetlink = await GetEmailResetConfirm(user);
 
-        await _emailService.SendEmailAsync(new List<string> { user.Email }, "Reset Password", resetlink);
+        var emailMessage = new EmailMessageDto
+        {
+            To=new List<string> { user.Email },
+            Subject="Reset password",
+            Body=resetlink
+        };
+
+        await _emailService.PublishAsync(emailMessage);
         return new("Reset link sent to your email", true, HttpStatusCode.OK);
     }
     private async Task<string> GetEmailResetConfirm(AppUser user)

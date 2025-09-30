@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Nest;
+using Stripe;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -126,6 +127,11 @@ builder.Services.Configure<CloudinarySettings>(
 
 builder.Services.Configure<FaceBookSetting>(
     builder.Configuration.GetSection("Facebook"));
+
+builder.Services.Configure<StripeSettings>(
+    builder.Configuration.GetSection("Stripe"));
+
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSetting>();
 

@@ -1,13 +1,18 @@
-﻿using CnC.Application.Abstracts.Repositories.IDownloadRepositories;
+﻿using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
+using CnC.Application.Abstracts.Repositories.IDownloadRepositories;
 using CnC.Application.Abstracts.Repositories.IOrderRepositories;
+using CnC.Application.Abstracts.Repositories.IPaymentMethodRepositories;
 using CnC.Application.Abstracts.Repositories.IPaymentRepositories;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Services;
 using CnC.Application.Shared.Helpers.SendOrderEmailHelpers;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
+using CnC.Domain.Enums;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using System.Net;
+using System.Security.Claims;
 
 namespace CnC.Application.Features.Payment;
 
@@ -16,48 +21,93 @@ namespace CnC.Application.Features.Payment;
 
 public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandRequest, BaseResponse<string>>
 {
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IOrderReadRepository _orderReadRepository;
-    private readonly IOrderWriteRepository _orderWriteRepository;
+    private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
+    private readonly IPaymentMethodReadRepository _paymentMethodReadRepository;
     private readonly IPaymentWriteRepository _paymentWriteRepository;
+    private readonly IStripePaymentService _stripeService;
+    private readonly IOrderWriteRepository _orderWriteRepository;
     private readonly IProductWriteRepository _productWriteRepository;
+    private readonly IElasticProductService _elasticsearchProductService;
     private readonly IDownloadWriteRepository _downloadWriteRepository;
-    private readonly IElasticProductService _elasticProductService;
-    private readonly IEmailService _emailService;
+    private readonly IEmailQueueService _emailQueueService;
 
     public CreatePaymentCommandHandler(
+        IHttpContextAccessor httpContextAccessor,
         IOrderReadRepository orderReadRepository,
-        IOrderWriteRepository orderWriteRepository,
+        ICurrencyRateReadRepository currencyRateReadRepository,
+        IPaymentMethodReadRepository paymentMethodReadRepository,
         IPaymentWriteRepository paymentWriteRepository,
+        IStripePaymentService stripeService,
+        IOrderWriteRepository orderWriteRepository,
         IProductWriteRepository productWriteRepository,
+        IElasticProductService elasticsearchProductService,
         IDownloadWriteRepository downloadWriteRepository,
-        IElasticProductService elasticProductService,
-        IEmailService emailService)
+        IEmailQueueService emailQueueService)
     {
+        _httpContextAccessor = httpContextAccessor;
         _orderReadRepository = orderReadRepository;
-        _orderWriteRepository = orderWriteRepository;
+        _currencyRateReadRepository = currencyRateReadRepository;
+        _paymentMethodReadRepository = paymentMethodReadRepository;
         _paymentWriteRepository = paymentWriteRepository;
+        _stripeService = stripeService;
+        _orderWriteRepository = orderWriteRepository;
         _productWriteRepository = productWriteRepository;
+        _elasticsearchProductService = elasticsearchProductService;
         _downloadWriteRepository = downloadWriteRepository;
-        _elasticProductService = elasticProductService;
-        _emailService = emailService;
+        _emailQueueService = emailQueueService;
     }
 
     public async Task<BaseResponse<string>> Handle(CreatePaymentCommandRequest request, CancellationToken cancellationToken)
     {
-        var order = await _orderReadRepository.GetOrderWithProductsAsync(request.OrderId, cancellationToken);
-        if (order is null)
-            return new("Order not found", HttpStatusCode.NotFound);
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return new("User not found", HttpStatusCode.Unauthorized);
 
-        if(order.isPaid)
-            return new("Order already paid",HttpStatusCode.BadRequest);
+        var order = await _orderReadRepository.GetOrderWithAllDetailsAsync(request.OrderId, cancellationToken);
+        if (order is null || order.UserId != userId)
+            return new("Order not found or not owned by user", HttpStatusCode.NotFound);
+
+        if (order.isPaid)
+            return new("Order already paid", HttpStatusCode.BadRequest);
+
+        if (!order.OrderProducts.Any())
+            return new("Order has no products", HttpStatusCode.BadRequest);
+
+        var paymentMethod = await _paymentMethodReadRepository.GetByIdAsync(request.PaymentId);
+        if (paymentMethod is null || paymentMethod.UserId != userId)
+            return new("Payment method not found", HttpStatusCode.NotFound);
+
+        decimal totalPrice = order.TotalAmount;
+        decimal currencyRate = 1;
+        if (request.Currency != Currency.AZN)
+        {
+            var currencyRateEntity = await _currencyRateReadRepository.GetCurrencyRateByCodeAsync(
+                request.Currency.ToString(), cancellationToken);
+
+            if (currencyRateEntity is null)
+                return new("Currency rate not found", HttpStatusCode.NotFound);
+
+            currencyRate = currencyRateEntity.RateAgainstAzn;
+            totalPrice = Math.Round(totalPrice / currencyRate, 2);
+        }
+
+        var paymentIntentId = await _stripeService.CreatePaymentIntentAsync(totalPrice, request.Currency.ToString());
+        var status = await _stripeService.AttachTestCardToIntentAsync(paymentIntentId);
 
         order.isPaid = true;
         _orderWriteRepository.Update(order);
 
         var payment = new Domain.Entities.Payment
         {
+            Id = Guid.NewGuid(),
             OrderId = order.Id,
-            PaymentMethodId = request.PaymentId
+            PaymentMethodId = paymentMethod.Id,
+            Currency = request.Currency,
+            Amount = totalPrice,
+            PaymentIntentId = paymentIntentId,
+            CreatedAt = DateTime.UtcNow,
         };
         await _paymentWriteRepository.AddAsync(payment);
 
@@ -86,25 +136,26 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         }
 
         if (productsToUpdate.Any())
-        {
             _productWriteRepository.UpdateRange(productsToUpdate);
-            foreach (var p in productsToUpdate)
-            {
-                await _elasticProductService.UpdateProductScoreAsync(p.Id, p.Score);
-            }
-        }
 
         if (downloads.Any())
             await _downloadWriteRepository.AddRangeAsync(downloads);
 
         await _orderWriteRepository.SaveChangeAsync();
         await _productWriteRepository.SaveChangeAsync();
-        await _paymentWriteRepository.SaveChangeAsync();
         await _downloadWriteRepository.SaveChangeAsync();
+        await _paymentWriteRepository.SaveChangeAsync();
 
-
-        await SendOrderEmailHelpers.SendOrderEmailsAsync(_emailService,order);
-        return new("Order successfully paid", true, HttpStatusCode.OK);
+        if (productsToUpdate.Any())
+        {
+            var updateTasks = productsToUpdate.Select(p =>
+                _elasticsearchProductService.UpdateProductScoreAsync(p.Id, p.Score));
+            await Task.WhenAll(updateTasks);
+        }
+        await SendOrderEmailHelpers.SendOrderEmailsAsync(_emailQueueService, order, request.Currency.ToString(), totalPrice, currencyRate);
+        return new ("Payment initiated", paymentIntentId, true, HttpStatusCode.OK);
     }
+
 }
+
 

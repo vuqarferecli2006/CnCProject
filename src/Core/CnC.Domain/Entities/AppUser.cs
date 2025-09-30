@@ -24,4 +24,6 @@ public class AppUser:IdentityUser
 
     public ICollection<BookMark> BookMarks { get; set; } = new List<BookMark>();
 
+    public ICollection<PaymentMethod> PaymentMethods { get; set; }= new List<PaymentMethod>();
+
 }

@@ -1,5 +1,6 @@
 ﻿using CnC.Application.Abstracts.Services;
 using CnC.Application.DTOs;
+using CnC.Application.DTOs.Email;
 using CnC.Application.Shared.Responses;
 using CnC.Domain.Entities;
 using CnC.Domain.Enums;
@@ -14,10 +15,10 @@ namespace CnC.Application.Features.User.Commands.Register;
 public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandRequest, BaseResponse<string>>
 {
     private readonly UserManager<AppUser> _userManager;
-    private readonly IEmailService _mailService;
+    private readonly IEmailQueueService _mailService;
 
 
-    public RegisterUserCommandHandler(UserManager<AppUser> userManager,IEmailService mailService)
+    public RegisterUserCommandHandler(UserManager<AppUser> userManager,IEmailQueueService mailService)
     {
         _userManager = userManager;
         _mailService = mailService;
@@ -70,7 +71,14 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
 
         var emailConfirmLink = await GetEmailConfirm(user);
 
-        await _mailService.SendEmailAsync(new List<string> { user.Email},"Email Confirmation",emailConfirmLink);
+        var emailMessage = new EmailMessageDto
+        {
+            To = new List<string> { user.Email },
+            Subject = "Email Confirmation",
+            Body = emailConfirmLink
+        };
+
+        await _mailService.PublishAsync(emailMessage);
 
         return new("User registered successfully , Link sent to your email.", user.Id, true, HttpStatusCode.Created);
     }

@@ -11,12 +11,6 @@ public class CreatePaymentMethodCommandRequestValidator : AbstractValidator<Crea
             .MaximumLength(50)
                 .WithMessage(" Name can be at most 50 characters long");
 
-        RuleFor(PayM => PayM.Currency)
-            .NotEmpty()
-                .WithMessage("Currency cannot be null")
-            .IsInEnum()
-                .WithMessage("Currency value is invalid.");
-
         RuleFor(PayM => PayM.MethodForPayment)
             .NotEmpty()
                 .WithMessage("Method for payment cannot be null")

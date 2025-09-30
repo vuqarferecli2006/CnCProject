@@ -3,6 +3,7 @@ using CnC.Application.Abstracts.Repositories.ICategoryRepositories;
 using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
 using CnC.Application.Abstracts.Repositories.IDownloadRepositories;
 using CnC.Application.Abstracts.Repositories.IFavouriteRepositories;
+using CnC.Application.Abstracts.Repositories.IInformationModelRepositories;
 using CnC.Application.Abstracts.Repositories.IOrderProductRepositories;
 using CnC.Application.Abstracts.Repositories.IOrderRepositories;
 using CnC.Application.Abstracts.Repositories.IPaymentMethodRepositories;
@@ -58,7 +59,9 @@ public static class ServiceRegistration
             services.AddScoped<IPaymentMethodWriteRepository, PaymentMethodRepository>();
             services.AddScoped<IDownloadReadRepository, DownloadRepository>();
             services.AddScoped<IDownloadWriteRepository, DownloadRepository>();
-        
+            services.AddScoped<IInformationModelReadRepository,InformationModelRepository>();
+            services.AddScoped<IInformationModelWriteRepository,InformationModelRepository>();
+
         #endregion
 
 
@@ -76,8 +79,8 @@ public static class ServiceRegistration
             services.AddScoped<IElasticProductService, ElasticProductService>();
             services.AddTransient<CurrencyUpdateJob>();
             services.AddHttpContextAccessor();
-
-            //services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
+            services.AddScoped<IStripePaymentService, StripeService>();
+            services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
 
         #endregion
     }
