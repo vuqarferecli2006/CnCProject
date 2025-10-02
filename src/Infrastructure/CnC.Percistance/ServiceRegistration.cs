@@ -71,12 +71,17 @@ public static class ServiceRegistration
         #endregion
 
 
+        #region Helpers
+
+        services.AddScoped<RoleUpdateHelper>();
+        services.AddScoped<RoleCreationHelper>();
+
+        #endregion
 
 
         #region Services
 
         services.AddSingleton<EmailConsumer>();
-        services.AddScoped<RoleCreationHelper>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailQueueService, RabbitMqEmailQueueService>();
