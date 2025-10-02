@@ -7,9 +7,11 @@ using CnC.Application.Features.User.Commands.FaceBook;
 using CnC.Application.Features.User.Commands.Google;
 using CnC.Application.Features.User.Commands.Login;
 using CnC.Application.Features.User.Commands.Logout;
+using CnC.Application.Features.User.Commands.Profil;
 using CnC.Application.Features.User.Commands.RefreshToken;
 using CnC.Application.Features.User.Commands.Register;
 using CnC.Application.Features.User.Queries.ResetConfirmEmail;
+using CnC.Application.Shared.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,8 +79,8 @@ public class UsersController : ControllerBase
         return StatusCode((int)response.StatusCode, response);
     }
 
-    [Authorize]
     [HttpPost]
+    [Authorize(Policy = Permission.User.LogOut)]
     public async Task<IActionResult> Logout([FromBody] LogoutUserCommandRequest request)
     {
         var response = await _mediator.Send(request);
@@ -104,15 +106,24 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Permission.User.ResetPasssword)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommandRequest request)
     {
         var response = await _mediator.Send(request);
         return StatusCode((int)response.StatusCode, response);
     }
 
-    [Authorize]
     [HttpPost]
+    [Authorize(Policy = Permission.User.ChangePasssword)]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommandRequest request)
+    {
+        var response = await _mediator.Send(request);
+        return StatusCode((int)response.StatusCode, response);
+    }
+
+    [HttpPut]
+    [Authorize(Policy = Permission.User.ProfileImageUpdated)]
+    public async Task<IActionResult> UpdateProfilePicture([FromForm] ProfilImageUpdateRequest request)
     {
         var response = await _mediator.Send(request);
         return StatusCode((int)response.StatusCode, response);

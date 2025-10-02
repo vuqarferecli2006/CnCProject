@@ -320,7 +320,7 @@ namespace CnC.Percistance.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -447,8 +447,14 @@ namespace CnC.Percistance.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -456,8 +462,15 @@ namespace CnC.Percistance.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("PaymentIntentId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("PaymentMethodId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -481,9 +494,6 @@ namespace CnC.Percistance.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Currency")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -494,10 +504,18 @@ namespace CnC.Percistance.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("StripePaymentMethodId")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("PaymentMethods");
                 });
@@ -986,6 +1004,15 @@ namespace CnC.Percistance.Migrations
                     b.Navigation("PaymentMethod");
                 });
 
+            modelBuilder.Entity("CnC.Domain.Entities.PaymentMethod", b =>
+                {
+                    b.HasOne("CnC.Domain.Entities.AppUser", "User")
+                        .WithMany("PaymentMethods")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CnC.Domain.Entities.Product", b =>
                 {
                     b.HasOne("CnC.Domain.Entities.Category", "Category")
@@ -1141,6 +1168,8 @@ namespace CnC.Percistance.Migrations
                     b.Navigation("BookMarks");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("PaymentMethods");
 
                     b.Navigation("ProductViews");
 

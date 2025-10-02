@@ -5,4 +5,5 @@ namespace CnC.Application.Abstracts.Repositories.IPaymentRepositories;
 
 public interface IPaymentWriteRepository:IWriteRepository<Payment>
 {
+    Task<Payment?> GetSingleAsync(Guid orderId,CancellationToken ct);
 }

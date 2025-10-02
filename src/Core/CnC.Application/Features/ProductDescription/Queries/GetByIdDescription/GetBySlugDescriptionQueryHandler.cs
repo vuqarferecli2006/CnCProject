@@ -1,5 +1,4 @@
 ﻿using CnC.Application.Abstracts.Repositories.ICurrencyRateRepository;
-using CnC.Application.Abstracts.Repositories.IProductCurrencyRepository;
 using CnC.Application.Abstracts.Repositories.IProductDescriptionRepository;
 using CnC.Application.Abstracts.Repositories.IProductRepositories;
 using CnC.Application.Abstracts.Repositories.IProductViewRepositories;
@@ -8,6 +7,7 @@ using CnC.Application.Shared.Responses;
 using CnC.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Security.Claims;
 
@@ -43,7 +43,6 @@ public class GetBySlugDescriptionQueryHandler : IRequestHandler<GetBySlugDescrip
 
     public async Task<BaseResponse<ProductDescriptionResponse>> Handle(GetBySlugDescriptionQueryRequest request, CancellationToken cancellationToken)
     {
-
         var productDescription = await _productDescriptionReadRepository
             .GetProductDescriptionBySlugAsync(request.Slug, cancellationToken);
 
@@ -71,6 +70,45 @@ public class GetBySlugDescriptionQueryHandler : IRequestHandler<GetBySlugDescrip
         await _elasticProductService.UpdateProductViewCountAsync(
             productDescription.ProductId, productDescription.ViewCount);
 
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var existingView = await _productViewReadRepository
+                .GetSingleAsync(userId,productDescription.ProductId,cancellationToken);
+
+            if (existingView is not null)
+            {
+                existingView.UpdatedAt = DateTime.UtcNow;
+                _productViewWriteRepository.Update(existingView);
+            }
+            else
+            {
+                var userViews = await _productViewReadRepository
+                    .GetAll().Where(pv => pv.UserId == userId)
+                    .OrderBy(pv => pv.UpdatedAt) 
+                    .ToListAsync(cancellationToken);
+
+                if (userViews.Count >= 12)
+                {
+                    var oldestView = userViews.First(); 
+                    _productViewWriteRepository.Delete(oldestView);
+                }
+
+                var newView = new Domain.Entities.ProductView
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ProductId = productDescription.ProductId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _productViewWriteRepository.AddAsync(newView);
+            }
+
+            await _productViewWriteRepository.SaveChangeAsync();
+        }
 
         var response = new ProductDescriptionResponse
         {

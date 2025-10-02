@@ -12,18 +12,18 @@ public class RemoveForOrderCommandHandler : IRequestHandler<RemoveForOrderComman
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IOrderReadRepository _orderReadRepository;
-    private readonly IOrderProductReadRepository _orderProductReadRepository;
     private readonly IOrderProductWriteRepository _orderProductWriteRepository;
+    private readonly IOrderWriteRepository _orderWriteRepository;
 
     public RemoveForOrderCommandHandler(
         IHttpContextAccessor httpContextAccessor,
         IOrderReadRepository orderReadRepository,
-        IOrderProductReadRepository orderProductReadRepository,
+        IOrderWriteRepository orderWriteRepository,
         IOrderProductWriteRepository orderProductWriteRepository)
     {
         _httpContextAccessor = httpContextAccessor;
         _orderReadRepository = orderReadRepository;
-        _orderProductReadRepository = orderProductReadRepository;
+        _orderWriteRepository = orderWriteRepository;
         _orderProductWriteRepository = orderProductWriteRepository;
     }
 
@@ -36,10 +36,18 @@ public class RemoveForOrderCommandHandler : IRequestHandler<RemoveForOrderComman
         var orderProduct = await _orderReadRepository.GetUserActiveOrderProductAsync(userId, request.ProductId, cancellationToken);
         if (orderProduct is null)
             return new("Product not found in orders", HttpStatusCode.NotFound);
-       
-        _orderProductWriteRepository.Delete(orderProduct);
-        await _orderProductWriteRepository.SaveChangeAsync();
 
+        var order = orderProduct.Order;
+
+        order.TotalAmount-=orderProduct.UnitPrice;
+        if (order.TotalAmount < 0)
+            order.TotalAmount = 0;
+        _orderWriteRepository.Update(order);
+
+        _orderProductWriteRepository.Delete(orderProduct);
+
+        await _orderProductWriteRepository.SaveChangeAsync();
+        await _orderWriteRepository.SaveChangeAsync();
         return new("Product removed from order", true, HttpStatusCode.OK);
     }
 }

@@ -8,7 +8,5 @@ public class CreatePaymentMethodCommandRequest:IRequest<BaseResponse<object>>
 {
     public string? Name { get; set; }
     
-    public Currency Currency { get; set; }
-
     public MethodForPayment MethodForPayment { get; set; }
 }

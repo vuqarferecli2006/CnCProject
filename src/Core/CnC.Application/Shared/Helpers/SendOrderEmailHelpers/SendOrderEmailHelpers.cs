@@ -1,11 +1,17 @@
 ﻿using CnC.Application.Abstracts.Services;
+using CnC.Application.DTOs.Email;
 using CnC.Domain.Entities;
 
 namespace CnC.Application.Shared.Helpers.SendOrderEmailHelpers;
 
 public static class SendOrderEmailHelpers
 {
-    public static async Task SendOrderEmailsAsync(IEmailService emailService, Order order)
+    public static async Task SendOrderEmailsAsync(
+        IEmailQueueService emailQueueService,
+        Order order,
+        string currencyCode,
+        decimal totalPrice,
+        decimal currencyRate)
     {
         if (order == null) throw new ArgumentNullException(nameof(order));
 
@@ -16,20 +22,31 @@ public static class SendOrderEmailHelpers
             .Select(op => new
             {
                 ProductName = op.Product?.Name ?? "Unknown Product",
-                Price = op.UnitPrice,
+                Price = Math.Round(op.UnitPrice / currencyRate, 2),
                 Seller = op.Product?.User
             })
             .ToList();
 
         if (!string.IsNullOrWhiteSpace(buyerEmail))
         {
-            var productList = string.Join(Environment.NewLine, products.Select(p => $"{p.ProductName} - Price: {p.Price:C}"));
-            var totalPrice = products.Sum(p => p.Price);
+            var productList = string.Join(Environment.NewLine,
+                products.Select(p => $"{p.ProductName} - Price: {p.Price} {currencyCode}"));
 
             var buyerSubject = $"Payment Confirm - Order #{order.Id}";
-            var buyerBody = $"Hello {buyerName},\nPayment for order confirmed.\n\nOrder Details:\n{productList}\nTotal Amount: {totalPrice:C}";
+            var buyerBody =
+                $"Hello {buyerName},\n" +
+                $"Payment for order confirmed.\n\n" +
+                $"Order Details:\n{productList}\n" +
+                $"Total Amount: {totalPrice} {currencyCode}";
 
-            await emailService.SendEmailAsync(new[] { buyerEmail }, buyerSubject, buyerBody);
+            var buyerMessage = new EmailMessageDto
+            {
+                To = new List<string> { buyerEmail },
+                Subject = buyerSubject,
+                Body = buyerBody
+            };
+
+            await emailQueueService.PublishAsync(buyerMessage);
         }
 
         var sellersGroups = products
@@ -39,14 +56,26 @@ public static class SendOrderEmailHelpers
         foreach (var group in sellersGroups)
         {
             var seller = group.First().Seller!;
-            var sellerProducts = string.Join(Environment.NewLine, group.Select(p => $"{p.ProductName} - Price: {p.Price:C}"));
+            var sellerProducts = string.Join(Environment.NewLine,
+                group.Select(p => $"{p.ProductName} - Price: {p.Price} {currencyCode}"));
+
             var totalPriceForSeller = group.Sum(p => p.Price);
 
             var sellerSubject = $"New Payment - Order #{order.Id}";
-            var sellerBody = $"Hello {seller.FullName},\nBuyer: {buyerName}\nPayment has been confirmed for your following products:\n{sellerProducts}\nTotal Amount: {totalPriceForSeller:C}";
+            var sellerBody =
+                $"Hello {seller.FullName},\n" +
+                $"Buyer: {buyerName}\n" +
+                $"Payment has been confirmed for your following products:\n{sellerProducts}\n" +
+                $"Total Amount: {totalPriceForSeller} {currencyCode}";
 
-            await emailService.SendEmailAsync(new List<string>{ seller.Email }, sellerSubject, sellerBody);
+            var sellerMessage = new EmailMessageDto
+            {
+                To = new List<string> { seller.Email },
+                Subject = sellerSubject,
+                Body = sellerBody
+            };
+
+            await emailQueueService.PublishAsync(sellerMessage);
         }
     }
-
 }

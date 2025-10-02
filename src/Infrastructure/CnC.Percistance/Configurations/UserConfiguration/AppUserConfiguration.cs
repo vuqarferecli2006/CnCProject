@@ -42,5 +42,10 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasMany(u => u.BookMarks)
                .WithOne(bm => bm.User)
                .HasForeignKey(bm => bm.UserId);
+
+        builder.HasMany(u=>u.PaymentMethods)
+               .WithOne(p => p.User)
+               .HasForeignKey(p => p.UserId);
+
     }
 }

@@ -11,8 +11,4 @@ public class RegisterUserCommandRequest:IRequest<BaseResponse<string>>
     public string Email { get; set; } = null!;
 
     public string Password { get; set; } = null!;
-
-    public string? ProfilPictureUrl { get; set; }
-
-    public MarketPlaceRole RoleId { get; set; }
 }

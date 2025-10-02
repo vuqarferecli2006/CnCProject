@@ -17,9 +17,9 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
 
     public async Task<OrderProduct?> GetUserActiveOrderProductAsync(string userId, Guid productId, CancellationToken ct)
     {
-        var orderProduct = await _context.Orders
-            .Where(o => o.UserId == userId && !o.isPaid)
-            .SelectMany(o => o.OrderProducts)
+        var orderProduct = await _context.OrderProducts
+            .Include(op=>op.Order)
+            .Where(op => op.ProductId == productId && op.Order.UserId == userId && !op.Order.isPaid)
             .AsNoTracking()
             .FirstOrDefaultAsync(op => op.ProductId == productId, ct);
 
@@ -37,7 +37,7 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
     }
 
 
-    public async Task<Order?> GetOrderWithProductsAsync(Guid orderId, CancellationToken ct)
+    public async Task<Order?> GetOrderWithAllDetailsAsync(Guid orderId, CancellationToken ct)
     {
         return await _context.Orders
             .Include(o => o.User) // Alıcı
@@ -47,12 +47,9 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
             .Include(o => o.OrderProducts)
                 .ThenInclude(op => op.Product)
                     .ThenInclude(p => p.ProductDescription)
-                        .ThenInclude(pd => pd.ProductFiles) 
+                        .ThenInclude(pd => pd.ProductFiles)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
     }
-
-
-
 
     public async Task<List<Order>> GetPaidOrdersByUserIdAsync(string userId, CancellationToken ct)
     {
@@ -77,4 +74,5 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
+
 }

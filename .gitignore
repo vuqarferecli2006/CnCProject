@@ -250,3 +250,5 @@ AkavacheSqliteLinkerOverride.cs
 NuGetBuild
 WiX.Toolset.DummyFile.txt
 GitHubVS.sln.DotSettings
+/src/Presentation/CnC.WepApi/appsettings.json
+/src/Presentation/CnC.WepApi/appsettings.Development.json

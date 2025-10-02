@@ -42,6 +42,17 @@ public class ProductViewRepository : Repository<ProductView>, IProductViewReadRe
             .ToListAsync(ct);
     }
 
+    public async Task<ProductView?> GetSingleAsync(string userId, Guid productId, CancellationToken ct, bool tracking = true)
+    {
+        var query = tracking
+            ? _context.ProductViews
+            : _context.ProductViews.AsNoTracking();
+
+        return await query
+            .SingleOrDefaultAsync(p => p.UserId == userId && p.ProductId == productId, ct);
+    }
+
+
     public async Task<List<ProductView>> GetUserViewsAsync(string? userId, string? sessionId, CancellationToken cancellationToken)
     {
         return await _context.ProductViews

@@ -8,4 +8,5 @@ public interface IProductViewReadRepository:IReadRepository<ProductView>
     Task<List<ProductView>> GetUserViewsAsync(string? userId, string? sessionId, CancellationToken cancellationToken);
     Task<List<ProductView>> GetBySessionIdAsync(string sessionId, CancellationToken ct);
     Task<List<ProductView>> GetByUserIdAsync(string userId, CancellationToken ct);
+    Task<ProductView?> GetSingleAsync(string userId, Guid productId, CancellationToken ct, bool tracking = true);
 }

@@ -3,7 +3,9 @@ using CnC.Application.Features.Order.Commands.Create;
 using CnC.Application.Features.Order.Commands.RemoveForOrder;
 using CnC.Application.Features.Order.Queries.GetOrder;
 using CnC.Application.Features.Order.Queries.GetPaidOrder;
+using CnC.Application.Shared.Permissions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CnC.WepApi.Controllers.Order
@@ -19,6 +21,7 @@ namespace CnC.WepApi.Controllers.Order
             _mediator = mediator;
         }
         [HttpPost]
+        [Authorize(Policy = Permission.Order.CreateOrder)]
         public async Task<IActionResult> CreateOrders([FromBody] CreateOrderCommandRequest request)
         {
             var response=await _mediator.Send(request);
@@ -26,6 +29,7 @@ namespace CnC.WepApi.Controllers.Order
         }
 
         [HttpPut]
+        [Authorize(Policy = Permission.Order.ChooseProductForOrder)]
         public async Task<IActionResult> ChooseProductForOrder([FromBody] ChooseForOrderCommandRequest request)
         {
             var response = await _mediator.Send(request);
@@ -33,6 +37,7 @@ namespace CnC.WepApi.Controllers.Order
         }
 
         [HttpPut]
+        [Authorize(Policy = Permission.Order.CancelProductForOrder)]
         public async Task<IActionResult> CancelProductForOrder([FromBody] RemoveForOrderCommandRequest request)
         {
             var response=await _mediator.Send(request);
@@ -40,6 +45,7 @@ namespace CnC.WepApi.Controllers.Order
         }
 
         [HttpGet] 
+        [Authorize(Policy = Permission.Order.GetAllOrder)]
         public async Task<IActionResult> GetOrder([FromQuery] GetOrderQueryRequest request)
         {
             var response= await _mediator.Send(new GetOrderQueryRequest { Currency=request.Currency});
@@ -47,6 +53,7 @@ namespace CnC.WepApi.Controllers.Order
         }
 
         [HttpGet]
+        [Authorize(Policy = Permission.Order.GetPaidOrder)]
         public async Task<IActionResult> GetPaidOrder()
         {
             var response = await _mediator.Send(new GetPaidOrderQueryRequest());
