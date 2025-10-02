@@ -1,6 +1,8 @@
 ﻿using CnC.Application.Features.Payment;
 using CnC.Application.Features.PaymentMethod;
+using CnC.Application.Shared.Permissions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +20,7 @@ namespace CnC.WepApi.Controllers.Payment
         }
 
         [HttpPost]
+        [Authorize(Policy = Permission.Payment.ChoosePaymentMethod)]
         public async Task<IActionResult> ChoosePaymentMethod([FromQuery]CreatePaymentMethodCommandRequest request)
         {
             var response = await _mediator.Send(request);
@@ -25,6 +28,7 @@ namespace CnC.WepApi.Controllers.Payment
         }
 
         [HttpPost]
+        [Authorize(Policy = Permission.Payment.PaymentCreate)]
         public async Task<IActionResult> PaymentForTest([FromQuery]CreatePaymentCommandRequest request)
         {
             var response = await _mediator.Send(request);

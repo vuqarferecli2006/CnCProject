@@ -2,6 +2,5 @@
 
 public enum MarketPlaceRole
 {
-    Buyer=1,
-    Seller=2
+    Buyer=1
 }

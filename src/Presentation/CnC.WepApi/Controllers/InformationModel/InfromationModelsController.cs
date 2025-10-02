@@ -1,7 +1,9 @@
 ﻿using CnC.Application.Features.InformationModel.Commands.Create;
 using CnC.Application.Features.InformationModel.Commands.Update;
 using CnC.Application.Features.InformationModel.Queries.GetAll;
+using CnC.Application.Shared.Permissions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
 
@@ -18,6 +20,7 @@ namespace CnC.WepApi.Controllers.InformationModel
             _mediator = mediator;
         }
         [HttpPost]
+        [Authorize(Policy = Permission.InformationModel.AddInformationModel)]
         public async Task<IActionResult> CreateInformationResult([FromBody] CreateInfromationModelRequest request)
         {
             var response= await _mediator.Send(request);
@@ -25,6 +28,7 @@ namespace CnC.WepApi.Controllers.InformationModel
         }
 
         [HttpPut]
+        [Authorize(Policy = Permission.InformationModel.UpdateInformationModel)]
         public async Task<IActionResult> UpdateInformationModel([FromBody]UpdateInformationModelRequest request)
         {
             var response = await _mediator.Send(request);

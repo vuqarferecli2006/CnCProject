@@ -148,12 +148,21 @@ public class Permission
         public const string LogOut = "User.LogOut";
         public const string ResetPasssword = "User.ResetPassword";
         public const string ChangePasssword = "User.ChangePassword";
-
+        public const string ProfileImageUpdated = "User.ProfileUpdate";
         public static List<string> All = new()
         {
             LogOut,
             ResetPasssword,
             ChangePasssword,
+            ProfileImageUpdated
+        };
+    }
+    public static class UserCreationByAdmin
+    {
+        public const string CreateUserByAdmin = "UserByAdmin.Create";
+        public static List<string> All = new()
+        {
+            CreateUserByAdmin,
         };
     }
 }

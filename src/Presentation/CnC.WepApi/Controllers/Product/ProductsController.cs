@@ -7,8 +7,11 @@ using CnC.Application.Features.Product.Commands.Update;
 using CnC.Application.Features.ProductDescription.Commands.Create;
 using CnC.Application.Features.ProductDescription.Commands.Update;
 using CnC.Application.Features.ProductDescription.Queries.GetByIdDescription;
+using CnC.Application.Features.ProductView.Commands.Create;
 using CnC.Application.Features.ProductView.Queries;
+using CnC.Application.Shared.Permissions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CnC.WepApi.Controllers.Product
@@ -26,6 +29,7 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpPost]
+        [Authorize(Policy = Permission.Product.CreateProduct)]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductCommandRequest request)
         {
             var response = await _mediator.Send(request);
@@ -33,6 +37,7 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpPost]
+        [Authorize(Policy = Permission.Product.CreateProductDescription)]
         public async Task<IActionResult> CreateProductDescription([FromForm] CreateProductDescriptionRequest request)
         {
             var response = await _mediator.Send(request);
@@ -40,6 +45,7 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpPut]
+        [Authorize(Policy = Permission.Product.UpdateProduct)]
         public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductCommandRequest request)
         {
             var response = await _mediator.Send(request);
@@ -47,6 +53,7 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpPut]
+        [Authorize(Policy = Permission.Product.UpdateProductDescription)]
         public async Task<IActionResult> UpdateProductDescription([FromForm] UpdateProductDescriptionRequest request)
         {
             var response = await _mediator.Send(request);
@@ -54,6 +61,7 @@ namespace CnC.WepApi.Controllers.Product
         }
 
         [HttpDelete]
+        [Authorize(Policy = Permission.Product.DeleteProduct)]
         public async Task<IActionResult> DeleteProduct([FromQuery] DeleteProductCommandRequest request)
         {
             var response = await _mediator.Send(request);
@@ -80,6 +88,14 @@ namespace CnC.WepApi.Controllers.Product
             var result = await _elasticProductService.FilterProductsAsync(dto, cancellationToken);
             return Ok(result);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> AddProtuctView([FromBody ] AddProductViewCommandRequest request)
+        {
+            var response = await _mediator.Send(request);
+            return StatusCode((int)response.StatusCode, response);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetProductView([FromQuery] GetUserProductViewsQueryRequest request)
         {

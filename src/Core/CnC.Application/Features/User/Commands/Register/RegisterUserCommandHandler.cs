@@ -17,8 +17,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
     private readonly UserManager<AppUser> _userManager;
     private readonly IEmailQueueService _mailService;
 
-
-    public RegisterUserCommandHandler(UserManager<AppUser> userManager,IEmailQueueService mailService)
+    public RegisterUserCommandHandler(UserManager<AppUser> userManager, IEmailQueueService mailService)
     {
         _userManager = userManager;
         _mailService = mailService;
@@ -27,23 +26,20 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
     public async Task<BaseResponse<string>> Handle(RegisterUserCommandRequest request, CancellationToken cancellationToken)
     {
         var existingEmail = await _userManager.FindByEmailAsync(request.Email);
-
         if (existingEmail is not null)
             return new("This email is already registered", HttpStatusCode.BadRequest);
 
-        if (request.RoleId != MarketPlaceRole.Buyer && request.RoleId != MarketPlaceRole.Seller)
-            return new("Invalid role",HttpStatusCode.NotFound);
+        string defaultProfilePicture = "https://res.cloudinary.com/dfi81qldi/image/upload/v1759333492/profile_w71q2q.png";
 
         var user = new AppUser
         {
             FullName = request.FullName,
             Email = request.Email,
             UserName = request.Email,
-            PasswordHash = request.Password,
-            ProfilePictureUrl = request.ProfilPictureUrl
+            ProfilePictureUrl = defaultProfilePicture
         };
 
-        IdentityResult identityResult = await _userManager.CreateAsync(user, request.Password);
+        var identityResult = await _userManager.CreateAsync(user, request.Password);
         if (!identityResult.Succeeded)
         {
             StringBuilder errorMessage = new();
@@ -51,23 +47,12 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
             {
                 errorMessage.AppendLine(error.Description);
             }
-            return new(errorMessage.ToString(),HttpStatusCode.BadRequest);
+            return new(errorMessage.ToString(), HttpStatusCode.BadRequest);
         }
 
-        string roleName = request.RoleId switch
-        {
-            MarketPlaceRole.Buyer => "Buyer",
-            MarketPlaceRole.Seller => "Seller",
-            _ => throw new ArgumentOutOfRangeException(nameof(request.RoleId), "Invalid user role")
-        };
-
-        if (roleName is null)
-            return new("Role not found",HttpStatusCode.NotFound);
-
-        var roleResult=await _userManager.AddToRoleAsync(user, roleName);
-        
+        var roleResult = await _userManager.AddToRoleAsync(user, MarketPlaceRole.Buyer.ToString());
         if (!roleResult.Succeeded)
-            return new("Failed to assign role to user",HttpStatusCode.BadRequest);
+            return new("Failed to assign role to user", HttpStatusCode.BadRequest);
 
         var emailConfirmLink = await GetEmailConfirm(user);
 
@@ -80,7 +65,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
 
         await _mailService.PublishAsync(emailMessage);
 
-        return new("User registered successfully , Link sent to your email.", user.Id, true, HttpStatusCode.Created);
+        return new("User registered successfully, Link sent to your email.", user.Id, true, HttpStatusCode.Created);
     }
 
     private async Task<string> GetEmailConfirm(AppUser user)
@@ -90,3 +75,4 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommandReq
         return emailConfirmLink;
     }
 }
+
