@@ -35,7 +35,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommandRequest
         if (permissionResult is not null)
             return permissionResult;
 
-        return new BaseResponse<string?>("Role created successfully", true, HttpStatusCode.OK);
+        return new("Role created successfully", true, HttpStatusCode.OK);
     }
     
 }

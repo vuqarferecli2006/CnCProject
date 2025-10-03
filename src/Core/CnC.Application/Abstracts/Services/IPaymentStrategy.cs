@@ -1,7 +1,7 @@
 ﻿namespace CnC.Application.Abstracts.Services;
 
-public interface IStripePaymentService
+public interface IPaymentStrategy
 {
     Task<string> CreatePaymentIntentAsync(decimal amount, string currency);
-    Task<string> AttachTestCardToIntentAsync(string paymentIntentId);
+    Task<string> ConfirmPaymentAsync(string paymentIntentId);
 }

@@ -71,12 +71,17 @@ public static class ServiceRegistration
         #endregion
 
 
+        #region Helpers
+
+        services.AddScoped<RoleUpdateHelper>();
+        services.AddScoped<RoleCreationHelper>();
+
+        #endregion
 
 
         #region Services
 
         services.AddSingleton<EmailConsumer>();
-        services.AddScoped<RoleCreationHelper>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IEmailQueueService, RabbitMqEmailQueueService>();
@@ -85,7 +90,8 @@ public static class ServiceRegistration
         services.AddScoped<IElasticProductService, ElasticProductService>();
         services.AddTransient<CurrencyUpdateJob>();
         services.AddHttpContextAccessor();
-        services.AddScoped<IStripePaymentService, StripeService>();
+        services.AddScoped<StripePaymentStrategy>();
+        services.AddScoped<IPaymentStrategyFactory, PaymentStrategyFactory>();
         services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
 
         #endregion

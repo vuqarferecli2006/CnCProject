@@ -38,6 +38,7 @@ public class Permission
         public const string AddBasket = "Basket.Add";
         public const string DeleteBasket = "Basket.Delete";
         public const string GetAllBasket = "Basket.GetAll";
+        
         public static List<string> All = new()
         {
             AddBasket,
@@ -49,12 +50,12 @@ public class Permission
     {
         public const string CreateBio = "Bio.Create";
         public const string UpdateBio = "Bio.Update";
-        public const string GetAll= "Bio.Create";
+        public const string GetAll= "Bio.GetAll";
         public static List<string> All = new()
         {
             CreateBio,
             UpdateBio,
-            GetAll
+            GetAll,
         };
     }
     public static class Download
@@ -121,7 +122,7 @@ public class Permission
         public const string UpdateProduct = "Product.Update";
         public const string CreateProductDescription = "ProductDescription.Create";
         public const string UpdateProductDescription = "ProductDescription.Update";
-        public const string DeleteProduct = "Product.Create";
+        public const string DeleteProduct = "Product.Delete";
 
         public static List<string> All = new()
         {
@@ -136,25 +137,20 @@ public class Permission
     {
         public const string CreateRole = "Role.Create";
         public const string AssignRole = "Role.Assign";
-
+        public const string AddPermision = "Role.AddPermision";
+        public const string DeletePermission = "Role.DeletePermision";
+        public const string DeleteRole = "Role.Delete";
+        public const string UpdateRole = "Role.Update";
+        public const string GetAllRoles = "Role.GetAll";
         public static List<string> All = new()
         {
             CreateRole,
             AssignRole,
-        };
-    }
-    public static class User
-    {
-        public const string LogOut = "User.LogOut";
-        public const string ResetPasssword = "User.ResetPassword";
-        public const string ChangePasssword = "User.ChangePassword";
-        public const string ProfileImageUpdated = "User.ProfileUpdate";
-        public static List<string> All = new()
-        {
-            LogOut,
-            ResetPasssword,
-            ChangePasssword,
-            ProfileImageUpdated
+            AddPermision,
+            DeletePermission,
+            DeleteRole,
+            UpdateRole,
+            GetAllRoles
         };
     }
     public static class UserCreationByAdmin

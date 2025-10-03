@@ -6,9 +6,9 @@ using Stripe;
 
 namespace CnC.Infrastructure.Services;
 
-public class StripeService : IStripePaymentService
+public class StripePaymentStrategy : IPaymentStrategy
 {
-    public StripeService(IConfiguration config)
+    public StripePaymentStrategy(IConfiguration config)
     {
         StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
     }
@@ -17,7 +17,7 @@ public class StripeService : IStripePaymentService
     {
         var options = new PaymentIntentCreateOptions
         {
-            Amount = (long)(amount * 100),  
+            Amount = (long)(amount * 100),
             Currency = currency.ToLower(),
             PaymentMethodTypes = new List<string> { "card" }
         };
@@ -26,7 +26,7 @@ public class StripeService : IStripePaymentService
         return intent.Id;
     }
 
-    public async Task<string> AttachTestCardToIntentAsync(string paymentIntentId)
+    public async Task<string> ConfirmPaymentAsync(string paymentIntentId)
     {
         var intentService = new PaymentIntentService();
         var updateOptions = new PaymentIntentUpdateOptions
@@ -37,11 +37,10 @@ public class StripeService : IStripePaymentService
 
         var confirmOptions = new PaymentIntentConfirmOptions
         {
-            PaymentMethod = "pm_card_mastercard"  
+            PaymentMethod = "pm_card_mastercard"
         };
         var confirmed = await intentService.ConfirmAsync(paymentIntentId, confirmOptions);
 
         return confirmed.Status;
     }
-
 }

@@ -1,5 +1,6 @@
-﻿using CnC.Application.Features.Payment;
+﻿using CnC.Application.Features.Payment.Commands;
 using CnC.Application.Features.PaymentMethod;
+using CnC.Application.Features.PaymentMethod.Queries;
 using CnC.Application.Shared.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,14 @@ namespace CnC.WepApi.Controllers.Payment
             var response = await _mediator.Send(request);
             return StatusCode((int)response.StatusCode, response);
         }
-        
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetPaymentMethod()
+        {
+            var response = await _mediator.Send(new GetPaymentMethodQueryRequest());
+            return StatusCode((int)response.StatusCode, response);
+        }
+
     }
 }

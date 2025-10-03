@@ -7,9 +7,11 @@ using CnC.Application.Features.User.Commands.FaceBook;
 using CnC.Application.Features.User.Commands.Google;
 using CnC.Application.Features.User.Commands.Login;
 using CnC.Application.Features.User.Commands.Logout;
-using CnC.Application.Features.User.Commands.Profil;
+using CnC.Application.Features.User.Commands.Profil.FullName;
+using CnC.Application.Features.User.Commands.Profil.Image;
 using CnC.Application.Features.User.Commands.RefreshToken;
 using CnC.Application.Features.User.Commands.Register;
+using CnC.Application.Features.User.Queries.GetMyProfile;
 using CnC.Application.Features.User.Queries.ResetConfirmEmail;
 using CnC.Application.Shared.Permissions;
 using MediatR;
@@ -80,7 +82,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = Permission.User.LogOut)]
+    [Authorize]
     public async Task<IActionResult> Logout([FromBody] LogoutUserCommandRequest request)
     {
         var response = await _mediator.Send(request);
@@ -106,7 +108,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = Permission.User.ResetPasssword)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommandRequest request)
     {
         var response = await _mediator.Send(request);
@@ -114,7 +115,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = Permission.User.ChangePasssword)]
+    [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommandRequest request)
     {
         var response = await _mediator.Send(request);
@@ -122,10 +123,26 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Policy = Permission.User.ProfileImageUpdated)]
+    [Authorize]
     public async Task<IActionResult> UpdateProfilePicture([FromForm] ProfilImageUpdateRequest request)
     {
         var response = await _mediator.Send(request);
+        return StatusCode((int)response.StatusCode, response);
+    }
+
+    [HttpPut]
+    [Authorize]
+    public async Task<IActionResult> UpdateFullName([FromBody]FullNameUpdateCommandRequest request)
+    {
+        var response = await _mediator.Send(request);
+        return StatusCode((int)response.StatusCode, response);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetProfile()
+    {
+        var response = await _mediator.Send(new GetProfileQueryRequest());
         return StatusCode((int)response.StatusCode, response);
     }
 }

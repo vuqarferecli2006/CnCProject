@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Security.Claims;
 
-namespace CnC.Application.Features.Payment;
+namespace CnC.Application.Features.Payment.Commands;
 
 
 //This is a handler written for testing
@@ -26,7 +26,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
     private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
     private readonly IPaymentMethodReadRepository _paymentMethodReadRepository;
     private readonly IPaymentWriteRepository _paymentWriteRepository;
-    private readonly IStripePaymentService _stripeService;
+    private readonly IPaymentStrategyFactory _paymentStrategyFactory;
     private readonly IOrderWriteRepository _orderWriteRepository;
     private readonly IProductWriteRepository _productWriteRepository;
     private readonly IElasticProductService _elasticsearchProductService;
@@ -39,7 +39,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         ICurrencyRateReadRepository currencyRateReadRepository,
         IPaymentMethodReadRepository paymentMethodReadRepository,
         IPaymentWriteRepository paymentWriteRepository,
-        IStripePaymentService stripeService,
+        IPaymentStrategyFactory paymentStrategyFactory,
         IOrderWriteRepository orderWriteRepository,
         IProductWriteRepository productWriteRepository,
         IElasticProductService elasticsearchProductService,
@@ -51,7 +51,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
         _currencyRateReadRepository = currencyRateReadRepository;
         _paymentMethodReadRepository = paymentMethodReadRepository;
         _paymentWriteRepository = paymentWriteRepository;
-        _stripeService = stripeService;
+        _paymentStrategyFactory = paymentStrategyFactory;
         _orderWriteRepository = orderWriteRepository;
         _productWriteRepository = productWriteRepository;
         _elasticsearchProductService = elasticsearchProductService;
@@ -93,8 +93,10 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommandR
             totalPrice = Math.Round(totalPrice / currencyRate, 2);
         }
 
-        var paymentIntentId = await _stripeService.CreatePaymentIntentAsync(totalPrice, request.Currency.ToString());
-        var status = await _stripeService.AttachTestCardToIntentAsync(paymentIntentId);
+        var strategy = _paymentStrategyFactory.GetPaymentStrategy(paymentMethod.MethodForPayment);
+
+        var paymentIntentId = await strategy.CreatePaymentIntentAsync(totalPrice, request.Currency.ToString());
+        var status = await strategy.ConfirmPaymentAsync(paymentIntentId);
 
         order.isPaid = true;
         _orderWriteRepository.Update(order);

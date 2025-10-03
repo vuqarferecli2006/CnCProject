@@ -13,8 +13,11 @@ public class PaymentMethodRepository : Repository<PaymentMethod>, IPaymentMethod
        _context = context;
     }
 
-    public Task<PaymentMethod?> GetMethodWithUserAsync(Guid paymentMethodId)
+    public async Task<List<PaymentMethod>> GetMethodWithUserAsync(string userId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await _context.PaymentMethods
+            .Where(pm => pm.UserId == userId)
+            .OrderBy(pm => pm.CreatedAt) 
+            .ToListAsync(ct);
     }
 }

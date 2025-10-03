@@ -42,16 +42,5 @@ public class CreateProductDescriptionRequestValidator : AbstractValidator<Create
                 })
                     .WithMessage("ImageUrl must be a .jpeg, .jpg, .png, or .webp file");
 
-        RuleForEach(Pr => Pr.FileUrl).ChildRules(files =>
-        {
-            files.RuleFor(f => f.Length)
-                .GreaterThan(0)
-                .WithMessage("Each file cannot be empty")
-                .LessThanOrEqualTo(MaxFileSize)
-                .WithMessage("Each file size must not exceed 5 MB");
-            files.RuleFor(f => Path.GetExtension(f.FileName).ToLowerInvariant())
-                .Must(ext => _allowedExtensions.Contains(ext))
-                .WithMessage("Each file must be a .jpeg, .jpg, .png, or .webp file");
-        });
     }
 }
