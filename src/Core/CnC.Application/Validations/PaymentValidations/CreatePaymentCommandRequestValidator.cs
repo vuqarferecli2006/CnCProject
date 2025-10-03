@@ -1,4 +1,4 @@
-﻿using CnC.Application.Features.Payment;
+﻿using CnC.Application.Features.Payment.Commands;
 using FluentValidation;
 
 namespace CnC.Application.Validations.PaymentValidations;

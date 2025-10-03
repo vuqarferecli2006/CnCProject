@@ -90,7 +90,8 @@ public static class ServiceRegistration
         services.AddScoped<IElasticProductService, ElasticProductService>();
         services.AddTransient<CurrencyUpdateJob>();
         services.AddHttpContextAccessor();
-        services.AddScoped<IStripePaymentService, StripeService>();
+        services.AddScoped<StripePaymentStrategy>();
+        services.AddScoped<IPaymentStrategyFactory, PaymentStrategyFactory>();
         services.AddHostedService<EmailConsumerService>();  //RabbitMQ email consumer service
 
         #endregion

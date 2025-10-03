@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace CnC.Application.Features.User.Commands.Profil;
+namespace CnC.Application.Features.User.Commands.Profil.Image;
 
 public class ProfilImageUpdateRequest:IRequest<BaseResponse<string>>
 {

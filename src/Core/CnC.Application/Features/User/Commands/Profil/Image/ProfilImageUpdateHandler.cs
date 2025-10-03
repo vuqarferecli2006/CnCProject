@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Security.Claims;
 
-namespace CnC.Application.Features.User.Commands.Profil;
+namespace CnC.Application.Features.User.Commands.Profil.Image;
 
 public class ProfilImageUpdateHandler : IRequestHandler<ProfilImageUpdateRequest, BaseResponse<string>>
 {
