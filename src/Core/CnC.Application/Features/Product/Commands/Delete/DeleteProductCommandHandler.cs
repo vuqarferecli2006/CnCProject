@@ -62,7 +62,10 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
                     if (!string.IsNullOrEmpty(file.FileUrl))
                         await _fileService.DeleteFileAsync(file.FileUrl);
 
-                    _productFilesWriteRepository.Delete(file);
+                    file.IsDeleted = true;
+                    file.UpdatedAt = DateTime.UtcNow;
+
+                    _productFilesWriteRepository.Update(file);
                 }
                 await _productFilesWriteRepository.SaveChangeAsync();
 
@@ -77,6 +80,7 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandR
         foreach (var currency in currencies)
         {
             currency.IsDeleted = true;
+            currency.UpdatedAt = DateTime.UtcNow;
             _productCurrencyWriteRepository.Update(currency);
         }
         await _productCurrencyWriteRepository.SaveChangeAsync();
