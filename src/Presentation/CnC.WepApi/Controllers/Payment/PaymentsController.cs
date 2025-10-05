@@ -37,7 +37,7 @@ namespace CnC.WepApi.Controllers.Payment
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy =Permission.Payment.GetPaymentMethod)]
         public async Task<IActionResult> GetPaymentMethod()
         {
             var response = await _mediator.Send(new GetPaymentMethodQueryRequest());
