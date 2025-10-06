@@ -110,10 +110,12 @@ public class Permission
     {
         public const string ChoosePaymentMethod = "Payment.ChooseMethod";
         public const string PaymentCreate = "Payment.Create";
+        public const string GetPaymentMethod = "Payment.Get";
         public static List<string> All = new()
         {
             ChoosePaymentMethod,
             PaymentCreate,
+            GetPaymentMethod
         };
     }
     public static class Product

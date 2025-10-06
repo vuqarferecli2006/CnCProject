@@ -14,15 +14,17 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IOrderReadRepository _orderReadRepository;
     private readonly ICurrencyRateReadRepository _currencyRateReadRepository;
-
+    private readonly IOrderWriteRepository _orderWriteRepository;
     public GetOrderQueryHandler(
         IHttpContextAccessor httpContextAccessor,
         IOrderReadRepository orderReadRepository,
-        ICurrencyRateReadRepository currencyRateReadRepository)
+        ICurrencyRateReadRepository currencyRateReadRepository,
+        IOrderWriteRepository orderWriteRepository)
     {
         _httpContextAccessor = httpContextAccessor;
         _orderReadRepository = orderReadRepository;
         _currencyRateReadRepository = currencyRateReadRepository;
+        _orderWriteRepository = orderWriteRepository;
     }
 
     public async Task<BaseResponse<OrderResponse>> Handle(GetOrderQueryRequest request, CancellationToken cancellationToken)
@@ -34,6 +36,10 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
         var order = await _orderReadRepository.GetUserActiveOrderAsync(userId, cancellationToken);
         if (order is null)
             return new("No active order found", HttpStatusCode.NotFound);
+
+        order.OrderProducts = order.OrderProducts
+            .Where(op => op.Product != null && !op.Product.IsDeleted)
+            .ToList();
 
         if (!order.OrderProducts.Any())
             return new("Product not found in order", HttpStatusCode.NotFound);
@@ -48,6 +54,12 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
             rate = currencyRate.RateAgainstAzn;
         }
 
+        decimal recalculatedTotal = order.OrderProducts
+            .Sum(op => op.Product.PriceAzn); // Məhsul sayına görə çarpmalıdırsa burda × Quantity elə
+
+        order.TotalAmount = recalculatedTotal;
+        _orderWriteRepository.Update(order);
+
         var response = new OrderResponse
         {
             OrderId = order.Id,
@@ -56,8 +68,6 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
             Products = order.OrderProducts.Select(op =>
             {
                 decimal convertedUnitPrice = Math.Round(op.Product.PriceAzn / rate, 1);
-                decimal convertedTotalPrice = convertedUnitPrice;
-
                 return new OrderProductResponse
                 {
                     ProductId = op.ProductId,
@@ -67,8 +77,10 @@ public class GetOrderQueryHandler : IRequestHandler<GetOrderQueryRequest, BaseRe
                     PreviewImageUrl = op.Product?.PreviewImageUrl ?? string.Empty
                 };
             }).ToList(),
-            TotalOrderPrice = Math.Round(order.TotalAmount / rate, 1),
+
+            TotalOrderPrice = Math.Round(recalculatedTotal / rate, 1),
         };
+
         return new("Success", response, true, HttpStatusCode.OK);
     }
 }

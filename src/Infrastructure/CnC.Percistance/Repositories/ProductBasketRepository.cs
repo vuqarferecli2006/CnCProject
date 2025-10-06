@@ -24,9 +24,10 @@ public class ProductBasketRepository : Repository<ProductBasket>, IProductBasket
     public async Task<List<ProductBasket>> GetByBasketIdAsync(Guid basketId, CancellationToken ct)
     {
         return await _context.ProductBaskets
-            .Include(pb => pb.Product) 
-                .ThenInclude(p=>p.ProductDescription)
-            .Where(pb => pb.BasketId == basketId)
+            .Include(pb => pb.Product)
+                .ThenInclude(p => p.ProductDescription)
+            .Where(pb => pb.BasketId == basketId && pb.Product != null && !pb.Product.IsDeleted)
             .ToListAsync(ct);
     }
+
 }
