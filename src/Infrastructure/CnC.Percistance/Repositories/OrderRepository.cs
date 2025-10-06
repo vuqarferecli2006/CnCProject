@@ -29,12 +29,22 @@ public class OrderRepository : Repository<Order>, IOrderReadRepository, IOrderWr
 
     public async Task<Order?> GetUserActiveOrderAsync(string userId, CancellationToken ct)
     {
-        return await _context.Orders
+        var order = await _context.Orders
             .Include(o => o.OrderProducts)
                 .ThenInclude(op => op.Product)
-                    .ThenInclude(p => p.ProductDescription) 
+                    .ThenInclude(p => p.ProductDescription)
             .FirstOrDefaultAsync(o => o.UserId == userId && !o.isPaid, ct);
+
+        if (order != null)
+        {
+            order.OrderProducts = order.OrderProducts
+                .Where(op => op.Product != null && !op.Product.IsDeleted)
+                .ToList();
+        }
+
+        return order;
     }
+
 
 
     public async Task<Order?> GetOrderWithAllDetailsAsync(Guid orderId, CancellationToken ct)
